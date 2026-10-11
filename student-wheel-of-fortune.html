@@ -100,10 +100,11 @@
 
     .brand h1 { margin: 0; font-size: 18px; letter-spacing: -.03em; }
     .brand p { margin: 1px 0 0; color: var(--muted); font-size: 13px; }
-    .top-actions { display: flex; align-items: center; gap: 10px; }
-    .save-status { color: var(--muted); font-size: 12px; }
-    .export-status { color: var(--muted); font-size: 11px; }
-    .mobile-label { display: none; }
+    .sidebar-tools { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .sidebar-status { display: grid; gap: 3px; margin-bottom: 11px; }
+    .save-status, .export-status { color: var(--muted); font-size: 11px; }
+    .sidebar-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+    .sidebar-actions .button { min-width: 0; }
 
     .layout {
       display: grid;
@@ -250,7 +251,6 @@
     .spin-button { width: min(100%, 250px); min-height: 53px; border-radius: 15px; font-size: 16px; }
     .result { min-height: 29px; margin-top: 13px; color: var(--muted); font-size: 14px; text-align: center; }
     .result strong { color: var(--green); font-size: 17px; }
-    .wheel-options { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px; }
     .keyboard-hint { margin: 9px 0 0; color: #92978e; font-size: 11px; text-align: center; }
 
     dialog {
@@ -302,12 +302,7 @@
       .brand { gap: 9px; }
       .brand-mark { width: 39px; height: 39px; border-radius: 12px; }
       .brand h1 { font-size: 16px; }
-      .brand p, .save-status { display: none; }
-      .top-actions { flex-wrap: wrap; gap: 5px; }
-      .export-status { flex-basis: 100%; order: 1; text-align: right; }
-      .top-actions .button { min-height: 36px; padding: 6px 9px; font-size: 12px; }
-      .desktop-label { display: none; }
-      .mobile-label { display: inline; }
+      .brand p { display: none; }
       .layout { grid-template-columns: 1fr; }
       .wheel-panel { min-height: 0; grid-row: 1; padding: 22px 16px 20px; }
       .wheel-wrap { width: min(100%, 400px); margin: 14px auto 8px; }
@@ -329,14 +324,6 @@
           <h1>Student Wheel of Fortune</h1>
           <p>Who's up next?</p>
         </div>
-      </div>
-      <div class="top-actions">
-        <span class="save-status" id="save-status" aria-live="polite">Saved in this browser</span>
-        <span class="export-status" id="export-status" aria-live="polite"></span>
-        <button class="button small" id="theme-toggle" type="button" aria-pressed="false" title="Switch color theme">Dark mode</button>
-        <button class="button small" id="import-button" type="button" title="Load classes from a JSON file">↓ <span class="desktop-label">Import</span><span class="mobile-label">Import</span></button>
-        <button class="button small" id="export-button" type="button" title="Save classes as a JSON file">↑ <span class="desktop-label">Export</span><span class="mobile-label">Export</span></button>
-        <input class="visually-hidden" id="import-file" type="file" accept=".json,application/json">
       </div>
     </header>
 
@@ -371,6 +358,20 @@
           <button class="button small" id="rename-class-button" type="button">Rename</button>
           <button class="button small danger" id="delete-class-button" type="button">Delete class</button>
         </div>
+
+        <div class="sidebar-tools" aria-label="App settings and backups">
+          <div class="sidebar-status">
+            <span class="save-status" id="save-status" aria-live="polite">Saved in this browser</span>
+            <span class="export-status" id="export-status" aria-live="polite"></span>
+          </div>
+          <div class="sidebar-actions">
+            <button class="button small" id="theme-toggle" type="button" aria-pressed="false" title="Switch color theme">Dark mode</button>
+            <button class="button small" id="sound-toggle" type="button" aria-pressed="true">Click sound: on</button>
+            <button class="button small" id="import-button" type="button" title="Load classes from a JSON file">↓ Import</button>
+            <button class="button small" id="export-button" type="button" title="Save classes as a JSON file">↑ Export</button>
+          </div>
+          <input class="visually-hidden" id="import-file" type="file" accept=".json,application/json">
+        </div>
       </section>
 
       <section class="wheel-panel" aria-labelledby="wheel-title">
@@ -388,10 +389,7 @@
         </div>
         <button class="button primary spin-button" id="spin-button" type="button">Spin</button>
         <div class="result" id="result" aria-live="polite">Choose a class and spin the wheel.</div>
-        <div class="wheel-options">
-          <button class="button small" id="sound-toggle" type="button" aria-pressed="true">Click sound: on</button>
-          <p class="keyboard-hint">Tip: press Space to spin</p>
-        </div>
+        <p class="keyboard-hint">Tip: press Space to spin</p>
       </section>
     </div>
   </main>
@@ -401,12 +399,23 @@
       <h2 id="class-dialog-title">New class</h2>
       <p id="class-dialog-help">Choose a name for this class.</p>
       <label for="class-name-input">Class name</label>
-      <input id="class-name-input" type="text" maxlength="80" required autocomplete="off">
+      <input id="class-name-input" type="text" maxlength="80" required autocomplete="off" autofocus>
       <div class="dialog-actions">
         <button class="button" id="cancel-class-button" type="button">Cancel</button>
         <button class="button primary" type="submit" id="save-class-button">Create</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="confirmation-dialog" aria-labelledby="confirmation-title" aria-describedby="confirmation-message">
+    <div class="dialog-content">
+      <h2 id="confirmation-title">Confirm action</h2>
+      <p id="confirmation-message"></p>
+      <div class="dialog-actions">
+        <button class="button" id="confirmation-cancel" type="button">Cancel</button>
+        <button class="button primary" id="confirmation-accept" type="button">Continue</button>
+      </div>
+    </div>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -470,6 +479,46 @@
         toast.classList.add("visible");
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => toast.classList.remove("visible"), 2800);
+      }
+
+      function confirmAction(message, actionLabel) {
+        const dialog = $("#confirmation-dialog");
+        const cancelButton = $("#confirmation-cancel");
+        const acceptButton = $("#confirmation-accept");
+        $("#confirmation-message").textContent = message;
+        acceptButton.textContent = actionLabel;
+
+        return new Promise((resolve) => {
+          let settled = false;
+          const cleanup = () => {
+            cancelButton.removeEventListener("click", cancel);
+            acceptButton.removeEventListener("click", accept);
+            dialog.removeEventListener("close", close);
+          };
+          const finish = (confirmed) => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            if (dialog.open) dialog.close();
+            resolve(confirmed);
+          };
+          const cancel = () => finish(false);
+          const accept = () => finish(true);
+          const close = () => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            resolve(false);
+          };
+
+          cancelButton.addEventListener("click", cancel);
+          acceptButton.addEventListener("click", accept);
+          dialog.addEventListener("close", close);
+          dialog.showModal();
+          requestAnimationFrame(() => {
+            if (dialog.open) cancelButton.focus();
+          });
+        });
       }
 
       function applyTheme() {
@@ -794,7 +843,11 @@
         $("#save-class-button").textContent = isRename ? "Save" : "Create";
         classNameInput.value = isRename ? currentClass()?.name || "" : "";
         classDialog.showModal();
-        classNameInput.focus();
+        requestAnimationFrame(() => {
+          if (!classDialog.open) return;
+          classNameInput.focus();
+          if (isRename) classNameInput.select();
+        });
       }
 
       function randomIndex(max) {
@@ -1010,14 +1063,19 @@
         persistAndRender();
       });
 
-      $("#delete-class-button").addEventListener("click", () => {
+      $("#delete-class-button").addEventListener("click", async () => {
         const group = currentClass();
-        if (!group || !window.confirm(`Delete "${group.name}" and all of its students?`)) return;
+        if (!group || !await confirmAction(`Delete "${group.name}" and all of its students?`, "Delete class")) return;
         state.classes = state.classes.filter((item) => item.id !== group.id);
         state.selectedClassId = state.classes[0]?.id || null;
         state.rotation = 0;
         result.textContent = "";
         persistAndRender();
+        if (state.classes.length === 0) {
+          requestAnimationFrame(() => $("#new-class-button").focus());
+        } else {
+          requestAnimationFrame(() => classSelect.focus());
+        }
       });
 
       $("#add-student-form").addEventListener("submit", (event) => {
@@ -1071,12 +1129,13 @@
 
       $("#import-button").addEventListener("click", () => $("#import-file").click());
       $("#import-file").addEventListener("change", async (event) => {
-        const file = event.target.files[0];
+        const input = event.target;
+        const file = input.files[0];
         if (!file) return;
         try {
           const data = JSON.parse(await file.text());
           const classes = normalizeClasses(data.classes);
-          if (!window.confirm(`Load ${classes.length} ${classes.length === 1 ? "class" : "classes"}? This will replace the current data.`)) return;
+          if (!await confirmAction(`Load ${classes.length} ${classes.length === 1 ? "class" : "classes"}? This will replace the current data.`, "Load classes")) return;
           state.classes = classes;
           state.selectedClassId = classes[0]?.id || null;
           state.lastExportedAt = typeof data.exportedAt === "string" && Number.isFinite(Date.parse(data.exportedAt))
@@ -1089,7 +1148,7 @@
         } catch (error) {
           announce(`Import failed: ${error.message}`);
         } finally {
-          event.target.value = "";
+          input.value = "";
         }
       });
 
