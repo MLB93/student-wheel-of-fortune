@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f2">
+  <title>Klassen-Glücksrad</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20251f;
+      --muted: #727970;
+      --line: #e7e8e2;
+      --paper: #fff;
+      --canvas: #f5f5f2;
+      --green: #176b52;
+      --green-dark: #10523e;
+      --green-soft: #e8f3ee;
+      --orange: #ee8058;
+      --shadow: 0 16px 48px rgb(35 44 37 / 8%);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 15px/1.5 "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+    }
+
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+
+    .app-shell { max-width: 1440px; margin: 0 auto; padding: 30px 36px 40px; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--green);
+      color: white;
+      font-size: 23px;
+    }
+
+    .brand h1 { margin: 0; font-size: 18px; letter-spacing: -.03em; }
+    .brand p { margin: 1px 0 0; color: var(--muted); font-size: 13px; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .save-status { color: var(--muted); font-size: 12px; }
+    .mobile-label { display: none; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(270px, 345px) minmax(0, 1fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .panel, .wheel-panel {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .panel { padding: 23px; }
+    .panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .panel h2, .wheel-panel h2 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
+    .section-label { color: var(--muted); font-size: 12px; font-weight: 600; }
+
+    .class-select-wrap { margin: 18px 0 17px; }
+    label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 12px; font-weight: 600; }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid #dfe2db;
+      border-radius: 11px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    input, select { min-height: 43px; padding: 9px 12px; }
+    textarea { min-height: 110px; padding: 11px 12px; resize: vertical; }
+    input:focus, textarea:focus, select:focus { border-color: #70a58f; box-shadow: 0 0 0 3px rgb(23 107 82 / 10%); }
+
+    .student-toolbar { display: flex; justify-content: space-between; align-items: center; margin: 20px 0 9px; }
+    .student-count { color: var(--muted); font-size: 12px; }
+    .student-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 390px;
+      min-height: 135px;
+      overflow: auto;
+      padding-right: 3px;
+    }
+
+    .student-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 7px 8px;
+      border-radius: 10px;
+    }
+
+    .student-row:hover { background: #f7f8f5; }
+    .student-row input[type="checkbox"] { width: 17px; height: 17px; min-height: 0; margin: 0; accent-color: var(--green); }
+    .student-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .student-name.inactive { color: #969b94; text-decoration: line-through; }
+    .student-date { flex: 0 0 auto; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .student-row.has-date .student-name { flex: 1 1 auto; }
+    .remove-student, .text-button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .remove-student { width: 30px; height: 30px; border-radius: 8px; font-size: 18px; }
+    .remove-student:hover { background: #fcece7; color: #b3482b; }
+    .empty-list { padding: 20px 6px; color: var(--muted); font-size: 13px; text-align: center; }
+
+    .add-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 14px; }
+    .add-form input { min-width: 0; }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 9px 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: white;
+      color: var(--ink);
+      font-weight: 600;
+      transition: transform .15s, background .15s, border-color .15s;
+    }
+
+    .button:hover:not(:disabled) { transform: translateY(-1px); border-color: #c8cec5; background: #fafbf9; }
+    .button.small { min-height: 34px; padding: 6px 10px; font-size: 12px; }
+    .button.primary { border-color: var(--green); background: var(--green); color: white; }
+    .button.primary:hover:not(:disabled) { border-color: var(--green-dark); background: var(--green-dark); }
+    .button.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+    .button.ghost:hover:not(:disabled) { background: #f2f3ef; }
+    .button.danger { color: #a33f28; }
+
+    .panel-footer { display: flex; gap: 8px; margin-top: 16px; padding-top: 15px; border-top: 1px solid var(--line); }
+    .panel-footer .button { flex: 1; }
+
+    .wheel-panel {
+      display: flex;
+      min-width: 0;
+      min-height: 690px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 35px 30px 30px;
+      background:
+        radial-gradient(ellipse at 50% 43%, #fff 0, #fff 43%, #fbfcf9 76%, #f5f7f2 100%);
+    }
+
+    .wheel-heading { align-self: stretch; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .active-pill { padding: 6px 10px; border-radius: 20px; background: var(--green-soft); color: var(--green); font-size: 12px; font-weight: 700; }
+    .wheel-wrap { position: relative; width: min(100%, 510px); margin: 22px auto 13px; }
+    canvas { display: block; width: 100%; height: auto; overflow: visible; }
+
+    .pointer {
+      position: absolute;
+      z-index: 1;
+      top: -2px;
+      left: 50%;
+      width: 0;
+      height: 0;
+      transform: translateX(-50%);
+      border-top: 0;
+      border-right: 15px solid transparent;
+      border-left: 15px solid transparent;
+      border-top: 27px solid var(--orange);
+      filter: drop-shadow(0 3px 2px rgb(0 0 0 / 18%));
+    }
+
+    .spin-button { width: min(100%, 250px); min-height: 53px; border-radius: 15px; font-size: 16px; }
+    .result { min-height: 29px; margin-top: 13px; color: var(--muted); font-size: 14px; text-align: center; }
+    .result strong { color: var(--green); font-size: 17px; }
+    .wheel-options { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px; }
+    .keyboard-hint { margin: 9px 0 0; color: #92978e; font-size: 11px; text-align: center; }
+
+    dialog {
+      width: min(460px, calc(100% - 32px));
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 24px 80px rgb(0 0 0 / 20%);
+    }
+
+    dialog::backdrop { background: rgb(22 29 24 / 35%); backdrop-filter: blur(2px); }
+    .dialog-content { padding: 24px; }
+    .dialog-content h2 { margin: 0 0 7px; font-size: 19px; }
+    .dialog-content p { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; }
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 2;
+      max-width: min(440px, calc(100% - 32px));
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: #26352d;
+      color: white;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: .2s ease;
+    }
+
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+    @media (max-width: 850px) {
+      .app-shell { padding: 22px 18px 30px; }
+      .layout { grid-template-columns: minmax(250px, .85fr) minmax(0, 1.15fr); gap: 15px; }
+      .panel { padding: 18px; }
+      .wheel-panel { min-height: 600px; padding: 26px 20px; }
+      .wheel-wrap { width: min(100%, 410px); }
+    }
+
+    @media (max-width: 650px) {
+      .app-shell { padding: 17px 13px 24px; }
+      .topbar { align-items: flex-start; margin-bottom: 17px; }
+      .brand { gap: 9px; }
+      .brand-mark { width: 39px; height: 39px; border-radius: 12px; }
+      .brand h1 { font-size: 16px; }
+      .brand p, .save-status { display: none; }
+      .top-actions { gap: 5px; }
+      .top-actions .button { min-height: 36px; padding: 6px 9px; font-size: 12px; }
+      .desktop-label { display: none; }
+      .mobile-label { display: inline; }
+      .layout { grid-template-columns: 1fr; }
+      .wheel-panel { min-height: 0; grid-row: 1; padding: 22px 16px 20px; }
+      .wheel-wrap { width: min(100%, 400px); margin: 14px auto 8px; }
+      .panel { padding: 19px; }
+      .student-list { max-height: 280px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">✳</div>
+        <div>
+          <h1>Klassen-Glücksrad</h1>
+          <p>Wer ist heute an der Reihe?</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="save-status" id="save-status" aria-live="polite">Speicherung im Browser</span>
+        <button class="button small" id="import-button" type="button" title="Klassen aus einer JSON-Datei laden">↓ <span class="desktop-label">Importieren</span><span class="mobile-label">Import</span></button>
+        <button class="button small" id="export-button" type="button" title="Klassen als JSON-Datei speichern">↑ <span class="desktop-label">Exportieren</span><span class="mobile-label">Export</span></button>
+        <input class="visually-hidden" id="import-file" type="file" accept=".json,application/json">
+      </div>
+    </header>
+
+    <div class="layout">
+      <section class="panel" aria-labelledby="roster-title">
+        <div class="panel-heading">
+          <h2 id="roster-title">Klasse &amp; Schüler</h2>
+          <button class="button small" id="new-class-button" type="button">＋ Klasse</button>
+        </div>
+
+        <div class="class-select-wrap">
+          <label for="class-select">Aktuelle Klasse</label>
+          <select id="class-select"></select>
+        </div>
+
+        <div class="student-toolbar">
+          <span class="section-label">Teilnehmende</span>
+          <span class="student-count" id="student-count"></span>
+        </div>
+        <div class="student-list" id="student-list" aria-live="polite"></div>
+
+        <form class="add-form" id="add-student-form">
+          <label class="visually-hidden" for="student-input">Name hinzufügen</label>
+          <input id="student-input" type="text" maxlength="80" placeholder="Name hinzufügen…" autocomplete="off">
+          <button class="button primary" type="submit" aria-label="Schüler hinzufügen">＋</button>
+        </form>
+
+        <div class="panel-footer">
+          <button class="button small" id="rename-class-button" type="button">Umbenennen</button>
+          <button class="button small danger" id="delete-class-button" type="button">Klasse löschen</button>
+        </div>
+      </section>
+
+      <section class="wheel-panel" aria-labelledby="wheel-title">
+        <div class="wheel-heading">
+          <h2 id="wheel-title">Das Glücksrad</h2>
+          <span class="active-pill" id="active-pill">0 aktiv</span>
+        </div>
+        <div class="wheel-wrap">
+          <div class="pointer" aria-hidden="true"></div>
+          <canvas id="wheel" aria-label="Glücksrad mit allen Schülern; inaktive Namen sind ausgegraut und der letzte Gewinner ist hervorgehoben"></canvas>
+        </div>
+        <button class="button primary spin-button" id="spin-button" type="button">Drehen</button>
+        <div class="result" id="result" aria-live="polite">Wähle eine Klasse und dreh das Rad.</div>
+        <div class="wheel-options">
+          <button class="button small" id="sound-toggle" type="button" aria-pressed="true">Rattern: an</button>
+          <p class="keyboard-hint">Tipp: Leertaste dreht das Rad</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <dialog id="class-dialog">
+    <form class="dialog-content" id="class-form">
+      <h2 id="class-dialog-title">Neue Klasse</h2>
+      <p id="class-dialog-help">Gib der Klasse einen Namen.</p>
+      <label for="class-name-input">Klassenname</label>
+      <input id="class-name-input" type="text" maxlength="80" required autocomplete="off">
+      <div class="dialog-actions">
+        <button class="button" id="cancel-class-button" type="button">Abbrechen</button>
+        <button class="button primary" type="submit" id="save-class-button">Erstellen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const STORAGE_KEY = "klassen-gluecksrad-v1";
+      const COLORS = ["#f4bb65", "#70a58f", "#e88b70", "#8da6d1", "#c29ac9", "#e2a95c", "#68b7b0", "#da8298", "#9daa69", "#a992d1", "#e38f54", "#6b9bb1"];
+      const state = { classes: [], selectedClassId: null, rotation: 0, spinning: false, animationFrame: null, soundEnabled: true };
+      const $ = (selector) => document.querySelector(selector);
+
+      const classSelect = $("#class-select");
+      const studentList = $("#student-list");
+      const studentCount = $("#student-count");
+      const activePill = $("#active-pill");
+      const wheel = $("#wheel");
+      const spinButton = $("#spin-button");
+      const result = $("#result");
+      const classDialog = $("#class-dialog");
+      const classForm = $("#class-form");
+      const classNameInput = $("#class-name-input");
+      const toast = $("#toast");
+      let dialogMode = "create";
+      let toastTimer;
+      let audioContext = null;
+      let tickBuffer = null;
+
+      function makeId() {
+        return typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      }
+
+      function currentClass() {
+        return state.classes.find((item) => item.id === state.selectedClassId) || null;
+      }
+
+      function wheelStudents(group) {
+        if (!group) return [];
+        if (!Array.isArray(group.wheelStudentIds)) return group.students;
+        const visibleIds = new Set(group.wheelStudentIds);
+        return group.students.filter((student) => visibleIds.has(student.id));
+      }
+
+      function announce(message) {
+        toast.textContent = message;
+        toast.classList.add("visible");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("visible"), 2800);
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            version: 1,
+            classes: state.classes,
+            selectedClassId: state.selectedClassId
+          }));
+          $("#save-status").textContent = "Lokal gespeichert";
+        } catch (error) {
+          $("#save-status").textContent = "Speichern nicht möglich";
+          announce(`Der Browser konnte den Stand nicht speichern: ${error.message}`);
+        }
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const saved = JSON.parse(raw);
+          if (saved.version !== 1 || !Array.isArray(saved.classes)) throw new Error("Das gespeicherte Format wird nicht unterstützt.");
+          state.classes = normalizeClasses(saved.classes);
+          state.selectedClassId = state.classes.some((item) => item.id === saved.selectedClassId)
+            ? saved.selectedClassId
+            : state.classes[0]?.id || null;
+        } catch (error) {
+          announce(`Gespeicherte Daten konnten nicht geladen werden: ${error.message}`);
+        }
+      }
+
+      function normalizeClasses(classes) {
+        if (!Array.isArray(classes)) throw new Error("Die Datei enthält keine Klassenliste.");
+        return classes.map((item) => {
+          if (!item || typeof item.name !== "string" || !item.name.trim() || !Array.isArray(item.students)) {
+            throw new Error("Eine Klasse hat keinen gültigen Namen oder keine Schülerliste.");
+          }
+          const students = item.students.map((student) => {
+            if (!student || typeof student.name !== "string" || !student.name.trim()) {
+              throw new Error(`In der Klasse „${item.name}“ gibt es einen ungültigen Schülernamen.`);
+            }
+            return {
+              id: typeof student.id === "string" && student.id ? student.id : makeId(),
+              name: student.name.trim().slice(0, 80),
+              active: student.active !== false,
+              lastSelectedAt: typeof student.lastSelectedAt === "string" && /^\d{4}-\d{2}-\d{2}$/.test(student.lastSelectedAt)
+                ? student.lastSelectedAt
+                : null
+            };
+          });
+          return {
+            id: typeof item.id === "string" && item.id ? item.id : makeId(),
+            name: item.name.trim().slice(0, 80),
+            students,
+            wheelStudentIds: Array.isArray(item.wheelStudentIds)
+              ? item.wheelStudentIds.filter((id) => typeof id === "string" && students.some((student) => student.id === id))
+              : null,
+            winnerId: typeof item.winnerId === "string" && students.some((student) => student.id === item.winnerId)
+              ? item.winnerId
+              : null
+          };
+        });
+      }
+
+      function formatDate(date) {
+        const [year, month, day] = date.split("-").map(Number);
+        return new Intl.DateTimeFormat("de-DE").format(new Date(year, month - 1, day));
+      }
+
+      function localDateString() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function render() {
+        const selectedId = state.selectedClassId;
+        classSelect.replaceChildren();
+        if (state.classes.length === 0) {
+          const option = document.createElement("option");
+          option.value = "";
+          option.textContent = "Noch keine Klassen";
+          classSelect.append(option);
+          classSelect.disabled = true;
+        } else {
+          classSelect.disabled = state.spinning;
+          state.classes.forEach((item) => {
+            const option = document.createElement("option");
+            option.value = item.id;
+            option.textContent = item.name;
+            option.selected = item.id === selectedId;
+            classSelect.append(option);
+          });
+        }
+
+        const group = currentClass();
+        studentList.replaceChildren();
+        const activeStudents = group ? group.students.filter((student) => student.active) : [];
+        const total = group ? group.students.length : 0;
+        studentCount.textContent = `${activeStudents.length} von ${total} aktiv`;
+        activePill.textContent = `${activeStudents.length} aktiv`;
+
+        if (!group || total === 0) {
+          const empty = document.createElement("div");
+          empty.className = "empty-list";
+          empty.textContent = group ? "Füge den ersten Namen hinzu." : "Erstelle eine Klasse, um loszulegen.";
+          studentList.append(empty);
+        } else {
+          group.students.forEach((student) => {
+            const row = document.createElement("div");
+            row.className = `student-row${student.lastSelectedAt ? " has-date" : ""}`;
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = student.active;
+            checkbox.disabled = state.spinning;
+            checkbox.setAttribute("aria-label", `${student.active ? "Aktiv" : "Inaktiv"}: ${student.name}${student.lastSelectedAt ? `, zuletzt ausgewählt am ${formatDate(student.lastSelectedAt)}` : ""}`);
+            checkbox.addEventListener("change", () => {
+              student.active = checkbox.checked;
+              if (student.active) {
+                student.lastSelectedAt = null;
+                if (group.winnerId === student.id) group.winnerId = null;
+                if (Array.isArray(group.wheelStudentIds) && !group.wheelStudentIds.includes(student.id)) {
+                  group.wheelStudentIds.push(student.id);
+                }
+              }
+              result.textContent = "";
+              persistAndRender();
+            });
+            const name = document.createElement("span");
+            name.className = `student-name${student.active ? "" : " inactive"}`;
+            name.textContent = student.name;
+            if (student.lastSelectedAt) {
+              const date = document.createElement("span");
+              date.className = "student-date";
+              date.textContent = formatDate(student.lastSelectedAt);
+              date.title = `Ausgewählt am ${formatDate(student.lastSelectedAt)}`;
+              row.append(checkbox, name, date);
+            } else {
+              row.append(checkbox, name);
+            }
+            const remove = document.createElement("button");
+            remove.className = "remove-student";
+            remove.type = "button";
+            remove.textContent = "×";
+            remove.title = `${student.name} entfernen`;
+            remove.setAttribute("aria-label", `${student.name} entfernen`);
+            remove.disabled = state.spinning;
+            remove.addEventListener("click", () => {
+              group.students = group.students.filter((item) => item.id !== student.id);
+              if (Array.isArray(group.wheelStudentIds)) {
+                group.wheelStudentIds = group.wheelStudentIds.filter((id) => id !== student.id);
+              }
+              if (group.winnerId === student.id) group.winnerId = null;
+              result.textContent = "";
+              persistAndRender();
+            });
+            row.append(remove);
+            studentList.append(row);
+          });
+        }
+
+        $("#new-class-button").disabled = state.spinning;
+        $("#rename-class-button").disabled = !group || state.spinning;
+        $("#delete-class-button").disabled = !group || state.spinning;
+        $("#student-input").disabled = !group || state.spinning;
+        $("#import-button").disabled = state.spinning;
+        $("#export-button").disabled = state.spinning || state.classes.length === 0;
+        spinButton.disabled = state.spinning || activeStudents.length === 0;
+        spinButton.textContent = state.spinning ? "Das Rad dreht sich …" : activeStudents.length ? "Drehen" : "Niemand aktiv";
+        drawWheel(wheelStudents(group), group ? group.winnerId : null);
+      }
+
+      function persistAndRender() {
+        saveState();
+        render();
+      }
+
+      function drawWheel(students, winnerId = null, rotation = state.rotation) {
+        const context = wheel.getContext("2d");
+        if (!context) return;
+        const bounds = wheel.getBoundingClientRect();
+        const size = Math.max(1, Math.round(bounds.width * (window.devicePixelRatio || 1)));
+        if (wheel.width !== size || wheel.height !== size) {
+          wheel.width = size;
+          wheel.height = size;
+        }
+        const scale = size / 500;
+        context.setTransform(scale, 0, 0, scale, 0, 0);
+        context.clearRect(0, 0, 500, 500);
+
+        const center = 250;
+        const radius = 235;
+        context.save();
+        context.translate(center, center);
+        context.rotate(rotation);
+
+        if (students.length === 0) {
+          context.beginPath();
+          context.arc(0, 0, radius, 0, Math.PI * 2);
+          context.fillStyle = "#eef0eb";
+          context.fill();
+          context.fillStyle = "#8b9188";
+          context.font = "600 16px 'Segoe UI', sans-serif";
+          context.textAlign = "center";
+          context.textBaseline = "middle";
+          context.fillText("Füge Schüler hinzu", 0, 0);
+        } else {
+          const slice = (Math.PI * 2) / students.length;
+          students.forEach((student, index) => {
+            const start = -Math.PI / 2 + index * slice;
+            const end = start + slice;
+            context.beginPath();
+            context.moveTo(0, 0);
+            context.arc(0, 0, radius, start, end);
+            context.closePath();
+            const isWinner = student.id === winnerId;
+            context.fillStyle = student.active || isWinner ? COLORS[index % COLORS.length] : "#e5e8e2";
+            context.fill();
+            context.strokeStyle = isWinner ? "#176b52" : "rgba(255,255,255,.9)";
+            context.lineWidth = isWinner ? 9 : 2;
+            if (isWinner) {
+              context.shadowColor = "rgba(23,107,82,.42)";
+              context.shadowBlur = 12;
+            }
+            context.stroke();
+            context.shadowBlur = 0;
+
+            if (students.length <= 40) {
+              const middle = start + slice / 2;
+              context.save();
+              const labelRadius = radius * 0.64;
+              if (students.length > 2) {
+                context.rotate(middle);
+                context.translate(labelRadius, 0);
+                if (Math.cos(middle) < 0) context.rotate(Math.PI);
+              }
+              const fontSize = students.length > 24 ? 10 : students.length > 15 ? 11 : 13;
+              context.font = `600 ${fontSize}px 'Segoe UI', sans-serif`;
+              context.fillStyle = isWinner ? "#104d3b" : student.active ? "#25302a" : "#8b9188";
+              context.textAlign = "center";
+              context.textBaseline = "middle";
+              const maxWidth = Math.max(24, 2 * radius * Math.sin(Math.min(Math.PI / 2, slice / 2)) * 0.72);
+              let label = `${isWinner ? "★ " : ""}${student.name}`;
+              while (context.measureText(label).width > maxWidth && label.length > 3) label = `${label.slice(0, -2)}…`;
+              const x = students.length > 2 ? 0 : labelRadius * Math.cos(middle);
+              const y = students.length > 2 ? 0 : labelRadius * Math.sin(middle);
+              context.fillText(label, x, y, maxWidth);
+              context.restore();
+            }
+          });
+        }
+
+        context.beginPath();
+        context.arc(0, 0, 33, 0, Math.PI * 2);
+        context.fillStyle = "#fff";
+        context.fill();
+        context.strokeStyle = "rgba(34,45,38,.12)";
+        context.lineWidth = 2;
+        context.stroke();
+        context.restore();
+
+        context.beginPath();
+        context.arc(center, center, radius + 1, 0, Math.PI * 2);
+        context.strokeStyle = "#fff";
+        context.lineWidth = 8;
+        context.stroke();
+      }
+
+      function openClassDialog(mode) {
+        dialogMode = mode;
+        const isRename = mode === "rename";
+        $("#class-dialog-title").textContent = isRename ? "Klasse umbenennen" : "Neue Klasse";
+        $("#class-dialog-help").textContent = isRename ? "Ändere den Namen deiner Klasse." : "Gib der Klasse einen Namen.";
+        $("#save-class-button").textContent = isRename ? "Speichern" : "Erstellen";
+        classNameInput.value = isRename ? currentClass()?.name || "" : "";
+        classDialog.showModal();
+        classNameInput.focus();
+      }
+
+      function randomIndex(max) {
+        const values = new Uint32Array(1);
+        crypto.getRandomValues(values);
+        const limit = Math.floor(0x100000000 / max) * max;
+        let value = values[0];
+        while (value >= limit) {
+          crypto.getRandomValues(values);
+          value = values[0];
+        }
+        return value % max;
+      }
+
+      function playTick() {
+        if (!state.soundEnabled) return;
+        try {
+          if (!audioContext || audioContext.state !== "running" || !tickBuffer) {
+            throw new Error("Die Audioausgabe ist nicht bereit.");
+          }
+          const now = audioContext.currentTime;
+          const noise = audioContext.createBufferSource();
+          const noiseVolume = audioContext.createGain();
+          noise.buffer = tickBuffer;
+          noiseVolume.gain.setValueAtTime(0.22, now);
+          noiseVolume.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+          noise.connect(noiseVolume);
+          noiseVolume.connect(audioContext.destination);
+          noise.start(now);
+
+          const tone = audioContext.createOscillator();
+          const toneVolume = audioContext.createGain();
+          tone.type = "triangle";
+          tone.frequency.setValueAtTime(1050 + Math.random() * 350, now);
+          tone.frequency.exponentialRampToValueAtTime(320, now + 0.018);
+          toneVolume.gain.setValueAtTime(0.08, now);
+          toneVolume.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+          tone.connect(toneVolume);
+          toneVolume.connect(audioContext.destination);
+          tone.start(now);
+          tone.stop(now + 0.02);
+        } catch (error) {
+          state.soundEnabled = false;
+          updateSoundButton();
+          announce(`Das Rattergeräusch konnte nicht abgespielt werden: ${error.message}`);
+        }
+      }
+
+      async function prepareAudio() {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) throw new Error("Diese Browser-Version unterstützt die Audioausgabe nicht.");
+
+        audioContext ||= new AudioContextClass();
+        if (audioContext.state !== "running") await audioContext.resume();
+        if (audioContext.state !== "running") throw new Error("Der Browser hat die Audioausgabe nicht freigegeben.");
+
+        if (!tickBuffer) {
+          tickBuffer = audioContext.createBuffer(1, Math.ceil(audioContext.sampleRate * 0.035), audioContext.sampleRate);
+          const samples = tickBuffer.getChannelData(0);
+          for (let index = 0; index < samples.length; index++) {
+            samples[index] = (Math.random() * 2 - 1) * (1 - index / samples.length);
+          }
+        }
+      }
+
+      function updateSoundButton() {
+        const button = $("#sound-toggle");
+        button.textContent = state.soundEnabled ? "Rattern: an" : "Rattern: aus";
+        button.setAttribute("aria-pressed", String(state.soundEnabled));
+      }
+
+      async function spin() {
+        const group = currentClass();
+        const activeStudents = group ? group.students.filter((student) => student.active) : [];
+        if (state.spinning || activeStudents.length === 0) return;
+
+        state.spinning = true;
+        render();
+        if (state.soundEnabled) {
+          try {
+            await prepareAudio();
+          } catch (error) {
+            state.soundEnabled = false;
+            updateSoundButton();
+            announce(`Das Rattergeräusch konnte nicht gestartet werden: ${error.message}`);
+          }
+        }
+
+        group.wheelStudentIds = activeStudents.map((student) => student.id);
+        const slice = (Math.PI * 2) / activeStudents.length;
+        const approachedIndex = randomIndex(activeStudents.length);
+        const slipsToNeighbor = activeStudents.length > 1 && Math.random() < 0.35;
+        const winnerIndex = slipsToNeighbor
+          ? (approachedIndex + activeStudents.length - 1) % activeStudents.length
+          : approachedIndex;
+        const winner = activeStudents[winnerIndex];
+        const current = ((state.rotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const boundary = -approachedIndex * slice;
+        const boundaryOffset = ((boundary - current) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        const startRotation = state.rotation;
+        const fullTurns = (5 + Math.floor(Math.random() * 3)) * Math.PI * 2;
+        const boundaryRotation = startRotation + boundaryOffset + fullTurns;
+        const approachDistance = slice * 0.035;
+        const finalDistance = slice * (0.14 + Math.random() * 0.2);
+        const finalRotation = boundaryRotation + (slipsToNeighbor ? finalDistance : -finalDistance);
+        const mainDuration = 4550;
+        const suspenseDuration = 900;
+        const finalMoveDuration = 190;
+        const duration = mainDuration + suspenseDuration;
+        const startedAt = performance.now();
+        const wobbleAmplitude = slice * 0.008;
+        let lastTickBoundary = Math.floor(startRotation / slice);
+
+        group.winnerId = null;
+        result.textContent = "";
+        render();
+
+        function animate(now) {
+          const elapsed = now - startedAt;
+          if (elapsed < mainDuration) {
+            const progress = elapsed / mainDuration;
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const approachRotation = boundaryRotation - approachDistance;
+            state.rotation = startRotation + (approachRotation - startRotation) * eased;
+          } else if (elapsed < duration - finalMoveDuration) {
+            const progress = (elapsed - mainDuration) / (suspenseDuration - finalMoveDuration);
+            const wobble = wobbleAmplitude * Math.sin(progress * Math.PI * 4) * (1 - progress);
+            state.rotation = boundaryRotation - approachDistance + wobble;
+          } else if (elapsed < duration) {
+            const progress = (elapsed - (duration - finalMoveDuration)) / finalMoveDuration;
+            const eased = 1 - Math.pow(1 - progress, 2);
+            const approachRotation = boundaryRotation - approachDistance;
+            state.rotation = approachRotation + (finalRotation - approachRotation) * eased;
+          } else {
+            state.rotation = finalRotation;
+          }
+
+          const crossedBoundary = Math.floor(state.rotation / slice);
+          const boundaryStep = Math.sign(crossedBoundary - lastTickBoundary);
+          if (boundaryStep !== 0) {
+            const crossings = Math.min(Math.abs(crossedBoundary - lastTickBoundary), 3);
+            for (let crossing = 0; crossing < crossings; crossing++) playTick();
+            lastTickBoundary = crossedBoundary;
+          }
+          drawWheel(activeStudents);
+          if (elapsed < duration) {
+            state.animationFrame = requestAnimationFrame(animate);
+            return;
+          }
+
+          state.rotation = finalRotation % (Math.PI * 2);
+          state.spinning = false;
+          winner.active = false;
+          winner.lastSelectedAt = localDateString();
+          group.winnerId = winner.id;
+          result.innerHTML = `Ausgewählt: <strong></strong> <span>— bleibt markiert, bis zum nächsten Dreh.</span>`;
+          result.querySelector("strong").textContent = winner.name;
+          persistAndRender();
+        }
+
+        state.animationFrame = requestAnimationFrame(animate);
+      }
+
+      classSelect.addEventListener("change", () => {
+        state.selectedClassId = classSelect.value || null;
+        state.rotation = 0;
+        result.textContent = "Dreh das Rad, um jemanden auszuwählen.";
+        persistAndRender();
+      });
+
+      $("#new-class-button").addEventListener("click", () => openClassDialog("create"));
+      $("#rename-class-button").addEventListener("click", () => openClassDialog("rename"));
+      $("#cancel-class-button").addEventListener("click", () => classDialog.close());
+      $("#sound-toggle").addEventListener("click", () => {
+        state.soundEnabled = !state.soundEnabled;
+        updateSoundButton();
+      });
+
+      classForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = classNameInput.value.trim();
+        if (!name) return;
+        if (dialogMode === "rename") {
+          const group = currentClass();
+          if (!group) return;
+          group.name = name;
+        } else {
+          const group = { id: makeId(), name, students: [] };
+          state.classes.push(group);
+          state.selectedClassId = group.id;
+          state.rotation = 0;
+        }
+        classDialog.close();
+        result.textContent = "";
+        persistAndRender();
+      });
+
+      $("#delete-class-button").addEventListener("click", () => {
+        const group = currentClass();
+        if (!group || !window.confirm(`„${group.name}“ und alle zugehörigen Schüler löschen?`)) return;
+        state.classes = state.classes.filter((item) => item.id !== group.id);
+        state.selectedClassId = state.classes[0]?.id || null;
+        state.rotation = 0;
+        result.textContent = "";
+        persistAndRender();
+      });
+
+      $("#add-student-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const group = currentClass();
+        const input = $("#student-input");
+        const name = input.value.trim();
+        if (!group || !name) return;
+        const student = { id: makeId(), name: name.slice(0, 80), active: true, lastSelectedAt: null };
+        group.students.push(student);
+        if (Array.isArray(group.wheelStudentIds)) group.wheelStudentIds.push(student.id);
+        input.value = "";
+        result.textContent = "";
+        persistAndRender();
+        input.focus();
+      });
+
+      spinButton.addEventListener("click", spin);
+      document.addEventListener("keydown", (event) => {
+        const tagName = document.activeElement?.tagName;
+        if (event.code === "Space" && !event.repeat && !["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(tagName) && !classDialog.open) {
+          event.preventDefault();
+          spin();
+        }
+      });
+
+      $("#export-button").addEventListener("click", () => {
+        if (state.classes.length === 0) {
+          announce("Es gibt noch keine Klassen zum Exportieren.");
+          return;
+        }
+        const data = { app: "Klassen-Glücksrad", version: 1, classes: state.classes };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "klassen-gluecksrad.json";
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+
+      $("#import-button").addEventListener("click", () => $("#import-file").click());
+      $("#import-file").addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          const data = JSON.parse(await file.text());
+          const classes = normalizeClasses(data.classes);
+          if (!window.confirm(`${classes.length} ${classes.length === 1 ? "Klasse" : "Klassen"} laden? Der aktuelle Stand wird ersetzt.`)) return;
+          state.classes = classes;
+          state.selectedClassId = classes[0]?.id || null;
+          state.rotation = 0;
+          result.textContent = "";
+          persistAndRender();
+          announce("Klassen erfolgreich geladen.");
+        } catch (error) {
+          announce(`Import fehlgeschlagen: ${error.message}`);
+        } finally {
+          event.target.value = "";
+        }
+      });
+
+      if (typeof ResizeObserver !== "undefined") {
+        new ResizeObserver(() => {
+          const group = currentClass();
+          drawWheel(wheelStudents(group), group ? group.winnerId : null);
+        }).observe(wheel);
+      } else {
+        window.addEventListener("resize", () => {
+          const group = currentClass();
+          drawWheel(wheelStudents(group), group ? group.winnerId : null);
+        });
+      }
+
+      loadState();
+      updateSoundButton();
+      render();
+      if (state.classes.length === 0) result.textContent = "Erstelle eine Klasse und füge Schüler hinzu.";
+    })();
+  </script>
+</body>
+</html>
