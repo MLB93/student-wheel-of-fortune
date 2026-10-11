@@ -15,12 +15,12 @@ An animated wheel for randomly selecting students. The app is a single HTML file
 - The selected student remains highlighted on the wheel, is marked inactive in the list, and gets the selection date.
 - Inactive segments remain visible until the next spin, then are removed from the wheel.
 - Manually reactivating a student clears their selection date and winner highlight.
-- Class lists, active states, selection dates, the current winner, theme, and sidebar preference are saved in the browser.
+- Class lists, active states, selection dates, the current winner, theme, sidebar preference, and last-export timestamp are saved in the browser.
 - Collapse the student sidebar to make more room for the wheel.
 - The selected class name stays visible above the wheel while the sidebar is collapsed.
 - Switch between light and dark mode.
 - The wheel has an optional click sound. Near the end, it slows almost to a stop at a segment boundary and sometimes slips into the neighboring segment at the last moment.
-- Export a backup as JSON or import a previously exported file.
+- Export a backup as JSON or import a previously exported file. The app displays the last export date and includes that timestamp in the JSON backup.
 - Press Space to spin when an input, button, or select control is not focused.
 
-Data stays on this device in the browser used to open the file. Export a JSON backup regularly to preserve your classes or use them in another browser. The JSON file contains student names, activity states, and selection dates, so keep it private.
+Data is automatically saved in the browser on this device. This browser-based app cannot silently overwrite a backup file; use **Export** to download a JSON backup when you want a portable copy. Its last-export date is shown in the app and travels with the JSON file. Importing a backup restores that timestamp. The JSON file contains student names, activity states, and selection dates, so keep it private.

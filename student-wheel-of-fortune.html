@@ -102,6 +102,7 @@
     .brand p { margin: 1px 0 0; color: var(--muted); font-size: 13px; }
     .top-actions { display: flex; align-items: center; gap: 10px; }
     .save-status { color: var(--muted); font-size: 12px; }
+    .export-status { color: var(--muted); font-size: 11px; }
     .mobile-label { display: none; }
 
     .layout {
@@ -302,7 +303,8 @@
       .brand-mark { width: 39px; height: 39px; border-radius: 12px; }
       .brand h1 { font-size: 16px; }
       .brand p, .save-status { display: none; }
-      .top-actions { gap: 5px; }
+      .top-actions { flex-wrap: wrap; gap: 5px; }
+      .export-status { flex-basis: 100%; order: 1; text-align: right; }
       .top-actions .button { min-height: 36px; padding: 6px 9px; font-size: 12px; }
       .desktop-label { display: none; }
       .mobile-label { display: inline; }
@@ -330,6 +332,7 @@
       </div>
       <div class="top-actions">
         <span class="save-status" id="save-status" aria-live="polite">Saved in this browser</span>
+        <span class="export-status" id="export-status" aria-live="polite"></span>
         <button class="button small" id="theme-toggle" type="button" aria-pressed="false" title="Switch color theme">Dark mode</button>
         <button class="button small" id="import-button" type="button" title="Load classes from a JSON file">↓ <span class="desktop-label">Import</span><span class="mobile-label">Import</span></button>
         <button class="button small" id="export-button" type="button" title="Save classes as a JSON file">↑ <span class="desktop-label">Export</span><span class="mobile-label">Export</span></button>
@@ -423,7 +426,8 @@
         animationFrame: null,
         soundEnabled: true,
         darkMode: false,
-        sidebarCollapsed: false
+        sidebarCollapsed: false,
+        lastExportedAt: null
       };
       const $ = (selector) => document.querySelector(selector);
 
@@ -487,6 +491,13 @@
         });
       }
 
+      function updateExportStatus() {
+        const status = $("#export-status");
+        status.textContent = state.lastExportedAt
+          ? `Last JSON export: ${new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.lastExportedAt))}`
+          : "Last JSON export: never";
+      }
+
       function saveState() {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -494,7 +505,8 @@
             classes: state.classes,
             selectedClassId: state.selectedClassId,
             darkMode: state.darkMode,
-            sidebarCollapsed: state.sidebarCollapsed
+            sidebarCollapsed: state.sidebarCollapsed,
+            lastExportedAt: state.lastExportedAt
           }));
           $("#save-status").textContent = "Saved in this browser";
         } catch (error) {
@@ -513,9 +525,12 @@
           state.selectedClassId = state.classes.some((item) => item.id === saved.selectedClassId)
             ? saved.selectedClassId
             : state.classes[0]?.id || null;
-          if (raw && !localStorage.getItem(STORAGE_KEY)) saveState();
           state.darkMode = saved.darkMode === true;
           state.sidebarCollapsed = saved.sidebarCollapsed === true;
+          state.lastExportedAt = typeof saved.lastExportedAt === "string" && Number.isFinite(Date.parse(saved.lastExportedAt))
+            ? saved.lastExportedAt
+            : null;
+          if (!localStorage.getItem(STORAGE_KEY)) saveState();
         } catch (error) {
           announce(`Saved data could not be loaded: ${error.message}`);
         }
@@ -523,10 +538,14 @@
 
       function normalizeClasses(classes) {
         if (!Array.isArray(classes)) throw new Error("The file does not contain a class list.");
+        const classIds = new Set();
         return classes.map((item) => {
           if (!item || typeof item.name !== "string" || !item.name.trim() || !Array.isArray(item.students)) {
             throw new Error("A class has an invalid name or student list.");
           }
+          let id = typeof item.id === "string" && item.id ? item.id : makeId();
+          while (classIds.has(id)) id = makeId();
+          classIds.add(id);
           const students = item.students.map((student) => {
             if (!student || typeof student.name !== "string" || !student.name.trim()) {
               throw new Error(`Class "${item.name}" contains an invalid student name.`);
@@ -541,7 +560,7 @@
             };
           });
           return {
-            id: typeof item.id === "string" && item.id ? item.id : makeId(),
+            id,
             name: item.name.trim().slice(0, 80),
             students,
             wheelStudentIds: Array.isArray(item.wheelStudentIds)
@@ -589,6 +608,7 @@
 
         const group = currentClass();
         $("#selected-class-label").textContent = group ? `Class: ${group.name}` : "No class selected";
+        updateExportStatus();
         studentList.replaceChildren();
         const activeStudents = group ? group.students.filter((student) => student.active) : [];
         const total = group ? group.students.length : 0;
@@ -1029,7 +1049,15 @@
           announce("There are no classes to export yet.");
           return;
         }
-        const data = { app: "Student Wheel of Fortune", version: 1, classes: state.classes };
+        state.lastExportedAt = new Date().toISOString();
+        saveState();
+        updateExportStatus();
+        const data = {
+          app: "Student Wheel of Fortune",
+          version: 1,
+          exportedAt: state.lastExportedAt,
+          classes: state.classes
+        };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -1051,6 +1079,9 @@
           if (!window.confirm(`Load ${classes.length} ${classes.length === 1 ? "class" : "classes"}? This will replace the current data.`)) return;
           state.classes = classes;
           state.selectedClassId = classes[0]?.id || null;
+          state.lastExportedAt = typeof data.exportedAt === "string" && Number.isFinite(Date.parse(data.exportedAt))
+            ? data.exportedAt
+            : null;
           state.rotation = 0;
           result.textContent = "";
           persistAndRender();
