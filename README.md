@@ -17,6 +17,7 @@ An animated wheel for randomly selecting students. The app is a single HTML file
 - Manually reactivating a student clears their selection date and winner highlight.
 - Class lists, active states, selection dates, the current winner, theme, sidebar preference, and last-export timestamp are saved in the browser.
 - Collapse the student sidebar to make more room for the wheel.
+- On desktop, the app fits the window and long class lists scroll inside the sidebar.
 - The selected class name stays visible above the wheel while the sidebar is collapsed.
 - Find save status, import/export, theme, and sound controls in the student sidebar.
 - Switch between light and dark mode.
