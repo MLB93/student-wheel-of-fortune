@@ -1,23 +1,25 @@
-# Klassen-Glücksrad
+# Classroom Spin Wheel
 
-Ein animiertes Glücksrad zur zufälligen Auswahl von Schülern. Die App besteht aus einer einzelnen HTML-Datei und benötigt weder Python noch einen Webserver oder eine Internetverbindung.
+An animated wheel for randomly selecting students. The app is a single HTML file and needs no Python, web server, installation, or internet connection.
 
-## Starten
+## Getting started
 
-1. [index.html](./index.html) herunterladen oder den Projektordner öffnen.
-2. `index.html` doppelklicken und in Microsoft Edge, Chrome oder Firefox öffnen.
-3. Eine Klasse anlegen, Schüler hinzufügen und auf **Drehen** klicken.
+1. Download [index.html](./index.html) or open it from the project folder.
+2. Double-click `index.html` to open it in Microsoft Edge, Chrome, or Firefox.
+3. Create a class, add students, and select **Spin**.
 
-## Funktionen
+## Features
 
-- Mehrere Klassen mit eigenen Schülerlisten verwalten.
-- Schüler hinzufügen, entfernen sowie per Checkbox aktivieren oder deaktivieren.
-- Der ausgewählte Schüler bleibt als hervorgehobenes Segment auf dem Rad sichtbar, wird in der Liste deaktiviert und mit dem Auswahldatum versehen.
-- Inaktive Segmente bleiben bis zum nächsten Dreh sichtbar und verschwinden dann vom Rad.
-- Wird ein Schüler manuell wieder aktiviert, werden Auswahldatum und Gewinner-Markierung entfernt.
-- Klassen, Aktiv-Status, Auswahldaten und die aktuelle Gewinner-Markierung werden im lokalen Browserspeicher abgelegt.
-- Das Rad erzeugt beim Drehen ein optional abschaltbares Rattergeräusch. Es bremst kurz vor einer zufälligen Segmentgrenze fast bis zum Stillstand ab und springt manchmal im letzten Moment ins Nachbarfeld.
-- Über **Exportieren** lässt sich eine JSON-Sicherungsdatei speichern; **Importieren** lädt eine solche Datei wieder.
-- Das Rad lässt sich mit der Leertaste drehen, wenn kein Eingabefeld fokussiert ist.
+- Manage multiple classes and their student lists.
+- Add or remove students, or manually mark them active or inactive.
+- The selected student remains highlighted on the wheel, is marked inactive in the list, and gets the selection date.
+- Inactive segments remain visible until the next spin, then are removed from the wheel.
+- Manually reactivating a student clears their selection date and winner highlight.
+- Class lists, active states, selection dates, the current winner, theme, and sidebar preference are saved in the browser.
+- Collapse the student sidebar to make more room for the wheel.
+- Switch between light and dark mode.
+- The wheel has an optional click sound. Near the end, it slows almost to a stop at a segment boundary and sometimes slips into the neighboring segment at the last moment.
+- Export a backup as JSON or import a previously exported file.
+- Press Space to spin when an input, button, or select control is not focused.
 
-Die Daten bleiben auf diesem Gerät und in dem Browser, in dem die Datei geöffnet wurde. Exportiere regelmäßig eine JSON-Datei, wenn du deine Klassen sichern oder in einem anderen Browser verwenden möchtest. Die JSON-Datei enthält Namen, Aktiv-Status und Auswahldaten der Schüler; behandle sie daher vertraulich.
+Data stays on this device in the browser used to open the file. Export a JSON backup regularly to preserve your classes or use them in another browser. The JSON file contains student names, activity states, and selection dates, so keep it private.

@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f5f2">
-  <title>Klassen-Glücksrad</title>
+  <title>Classroom Spin Wheel</title>
   <style>
     :root {
       color-scheme: light;
@@ -17,7 +17,49 @@
       --green-dark: #10523e;
       --green-soft: #e8f3ee;
       --orange: #ee8058;
+      --input-bg: #fff;
+      --input-border: #dfe2db;
+      --hover-bg: #f7f8f5;
+      --button-hover-bg: #fafbf9;
+      --subtle-hover-bg: #f2f3ef;
+      --danger-bg: #fcece7;
+      --danger-color: #a33f28;
+      --wheel-empty: #eef0eb;
+      --wheel-inactive: #e5e8e2;
+      --wheel-text: #25302a;
+      --wheel-muted: #8b9188;
+      --wheel-winner: #176b52;
+      --wheel-center: #fff;
+      --wheel-outline: #fff;
       --shadow: 0 16px 48px rgb(35 44 37 / 8%);
+    }
+
+    body.dark-mode {
+      color-scheme: dark;
+      --ink: #edf0eb;
+      --muted: #a2aaa3;
+      --line: #39413b;
+      --paper: #242a26;
+      --canvas: #171c19;
+      --green: #64bf98;
+      --green-dark: #4ba780;
+      --green-soft: #243a30;
+      --orange: #f39a76;
+      --input-bg: #1d231f;
+      --input-border: #424a43;
+      --hover-bg: #2d342f;
+      --button-hover-bg: #2d342f;
+      --subtle-hover-bg: #313934;
+      --danger-bg: #482b27;
+      --danger-color: #f0a18d;
+      --wheel-empty: #313834;
+      --wheel-inactive: #4b534e;
+      --wheel-text: #25302a;
+      --wheel-muted: #c1c7c1;
+      --wheel-winner: #8bddb4;
+      --wheel-center: #202622;
+      --wheel-outline: #343c36;
+      --shadow: 0 16px 48px rgb(0 0 0 / 24%);
     }
 
     * { box-sizing: border-box; }
@@ -69,6 +111,12 @@
       align-items: stretch;
     }
 
+    .layout.sidebar-collapsed { grid-template-columns: minmax(0, 1fr); }
+    .layout.sidebar-collapsed .roster-panel { display: none; }
+    .show-roster-button { display: none; }
+    .layout.sidebar-collapsed .show-roster-button { display: inline-flex; }
+    .heading-title { display: flex; align-items: center; gap: 10px; }
+
     .panel, .wheel-panel {
       border: 1px solid var(--line);
       border-radius: 22px;
@@ -85,9 +133,9 @@
     label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 12px; font-weight: 600; }
     input, textarea, select {
       width: 100%;
-      border: 1px solid #dfe2db;
+      border: 1px solid var(--input-border);
       border-radius: 11px;
-      background: #fff;
+      background: var(--input-bg);
       color: var(--ink);
       outline: none;
       transition: border-color .15s, box-shadow .15s;
@@ -118,10 +166,11 @@
       border-radius: 10px;
     }
 
-    .student-row:hover { background: #f7f8f5; }
+    .student-row:hover { background: var(--hover-bg); }
     .student-row input[type="checkbox"] { width: 17px; height: 17px; min-height: 0; margin: 0; accent-color: var(--green); }
     .student-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .student-name.inactive { color: #969b94; text-decoration: line-through; }
+    body.dark-mode .student-name.inactive { color: var(--wheel-muted); }
     .student-date { flex: 0 0 auto; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
     .student-row.has-date .student-name { flex: 1 1 auto; }
     .remove-student, .text-button {
@@ -131,7 +180,7 @@
     }
 
     .remove-student { width: 30px; height: 30px; border-radius: 8px; font-size: 18px; }
-    .remove-student:hover { background: #fcece7; color: #b3482b; }
+    .remove-student:hover { background: var(--danger-bg); color: var(--danger-color); }
     .empty-list { padding: 20px 6px; color: var(--muted); font-size: 13px; text-align: center; }
 
     .add-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 14px; }
@@ -146,19 +195,19 @@
       padding: 9px 14px;
       border: 1px solid var(--line);
       border-radius: 11px;
-      background: white;
+      background: var(--paper);
       color: var(--ink);
       font-weight: 600;
       transition: transform .15s, background .15s, border-color .15s;
     }
 
-    .button:hover:not(:disabled) { transform: translateY(-1px); border-color: #c8cec5; background: #fafbf9; }
+    .button:hover:not(:disabled) { transform: translateY(-1px); border-color: var(--muted); background: var(--button-hover-bg); }
     .button.small { min-height: 34px; padding: 6px 10px; font-size: 12px; }
     .button.primary { border-color: var(--green); background: var(--green); color: white; }
     .button.primary:hover:not(:disabled) { border-color: var(--green-dark); background: var(--green-dark); }
     .button.ghost { border-color: transparent; background: transparent; color: var(--muted); }
-    .button.ghost:hover:not(:disabled) { background: #f2f3ef; }
-    .button.danger { color: #a33f28; }
+    .button.ghost:hover:not(:disabled) { background: var(--subtle-hover-bg); }
+    .button.danger { color: var(--danger-color); }
 
     .panel-footer { display: flex; gap: 8px; margin-top: 16px; padding-top: 15px; border-top: 1px solid var(--line); }
     .panel-footer .button { flex: 1; }
@@ -171,8 +220,7 @@
       align-items: center;
       justify-content: center;
       padding: 35px 30px 30px;
-      background:
-        radial-gradient(ellipse at 50% 43%, #fff 0, #fff 43%, #fbfcf9 76%, #f5f7f2 100%);
+      background: radial-gradient(ellipse at 50% 43%, var(--paper) 0, var(--paper) 43%, var(--canvas) 100%);
     }
 
     .wheel-heading { align-self: stretch; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -206,6 +254,8 @@
       padding: 0;
       border: 1px solid var(--line);
       border-radius: 18px;
+      background: var(--paper);
+      color: var(--ink);
       box-shadow: 0 24px 80px rgb(0 0 0 / 20%);
     }
 
@@ -244,7 +294,7 @@
 
     @media (max-width: 650px) {
       .app-shell { padding: 17px 13px 24px; }
-      .topbar { align-items: flex-start; margin-bottom: 17px; }
+      .topbar { align-items: flex-start; flex-wrap: wrap; margin-bottom: 17px; }
       .brand { gap: 9px; }
       .brand-mark { width: 39px; height: 39px; border-radius: 12px; }
       .brand h1 { font-size: 16px; }
@@ -271,62 +321,69 @@
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">✳</div>
         <div>
-          <h1>Klassen-Glücksrad</h1>
-          <p>Wer ist heute an der Reihe?</p>
+          <h1>Classroom Spin Wheel</h1>
+          <p>Who's up next?</p>
         </div>
       </div>
       <div class="top-actions">
-        <span class="save-status" id="save-status" aria-live="polite">Speicherung im Browser</span>
-        <button class="button small" id="import-button" type="button" title="Klassen aus einer JSON-Datei laden">↓ <span class="desktop-label">Importieren</span><span class="mobile-label">Import</span></button>
-        <button class="button small" id="export-button" type="button" title="Klassen als JSON-Datei speichern">↑ <span class="desktop-label">Exportieren</span><span class="mobile-label">Export</span></button>
+        <span class="save-status" id="save-status" aria-live="polite">Saved in this browser</span>
+        <button class="button small" id="theme-toggle" type="button" aria-pressed="false" title="Switch color theme">Dark mode</button>
+        <button class="button small" id="import-button" type="button" title="Load classes from a JSON file">↓ <span class="desktop-label">Import</span><span class="mobile-label">Import</span></button>
+        <button class="button small" id="export-button" type="button" title="Save classes as a JSON file">↑ <span class="desktop-label">Export</span><span class="mobile-label">Export</span></button>
         <input class="visually-hidden" id="import-file" type="file" accept=".json,application/json">
       </div>
     </header>
 
     <div class="layout">
-      <section class="panel" aria-labelledby="roster-title">
+      <section class="panel roster-panel" aria-labelledby="roster-title">
         <div class="panel-heading">
-          <h2 id="roster-title">Klasse &amp; Schüler</h2>
-          <button class="button small" id="new-class-button" type="button">＋ Klasse</button>
+          <h2 id="roster-title">Class &amp; students</h2>
+          <div class="heading-title">
+            <button class="button small" id="collapse-roster-button" type="button" aria-label="Collapse student list" title="Collapse student list">‹</button>
+            <button class="button small" id="new-class-button" type="button">＋ Class</button>
+          </div>
         </div>
 
         <div class="class-select-wrap">
-          <label for="class-select">Aktuelle Klasse</label>
+          <label for="class-select">Current class</label>
           <select id="class-select"></select>
         </div>
 
         <div class="student-toolbar">
-          <span class="section-label">Teilnehmende</span>
+          <span class="section-label">Students</span>
           <span class="student-count" id="student-count"></span>
         </div>
         <div class="student-list" id="student-list" aria-live="polite"></div>
 
         <form class="add-form" id="add-student-form">
-          <label class="visually-hidden" for="student-input">Name hinzufügen</label>
-          <input id="student-input" type="text" maxlength="80" placeholder="Name hinzufügen…" autocomplete="off">
-          <button class="button primary" type="submit" aria-label="Schüler hinzufügen">＋</button>
+          <label class="visually-hidden" for="student-input">Add a student</label>
+          <input id="student-input" type="text" maxlength="80" placeholder="Add a name..." autocomplete="off">
+          <button class="button primary" type="submit" aria-label="Add student">＋</button>
         </form>
 
         <div class="panel-footer">
-          <button class="button small" id="rename-class-button" type="button">Umbenennen</button>
-          <button class="button small danger" id="delete-class-button" type="button">Klasse löschen</button>
+          <button class="button small" id="rename-class-button" type="button">Rename</button>
+          <button class="button small danger" id="delete-class-button" type="button">Delete class</button>
         </div>
       </section>
 
       <section class="wheel-panel" aria-labelledby="wheel-title">
         <div class="wheel-heading">
-          <h2 id="wheel-title">Das Glücksrad</h2>
-          <span class="active-pill" id="active-pill">0 aktiv</span>
+          <div class="heading-title">
+            <button class="button small show-roster-button" id="expand-roster-button" type="button" aria-label="Show student list">☷ Students</button>
+            <h2 id="wheel-title">Spin the wheel</h2>
+          </div>
+          <span class="active-pill" id="active-pill">0 active</span>
         </div>
         <div class="wheel-wrap">
           <div class="pointer" aria-hidden="true"></div>
-          <canvas id="wheel" aria-label="Glücksrad mit allen Schülern; inaktive Namen sind ausgegraut und der letzte Gewinner ist hervorgehoben"></canvas>
+          <canvas id="wheel" aria-label="Wheel showing all students; inactive students are dimmed and the latest winner is highlighted"></canvas>
         </div>
-        <button class="button primary spin-button" id="spin-button" type="button">Drehen</button>
-        <div class="result" id="result" aria-live="polite">Wähle eine Klasse und dreh das Rad.</div>
+        <button class="button primary spin-button" id="spin-button" type="button">Spin</button>
+        <div class="result" id="result" aria-live="polite">Choose a class and spin the wheel.</div>
         <div class="wheel-options">
-          <button class="button small" id="sound-toggle" type="button" aria-pressed="true">Rattern: an</button>
-          <p class="keyboard-hint">Tipp: Leertaste dreht das Rad</p>
+          <button class="button small" id="sound-toggle" type="button" aria-pressed="true">Click sound: on</button>
+          <p class="keyboard-hint">Tip: press Space to spin</p>
         </div>
       </section>
     </div>
@@ -334,13 +391,13 @@
 
   <dialog id="class-dialog">
     <form class="dialog-content" id="class-form">
-      <h2 id="class-dialog-title">Neue Klasse</h2>
-      <p id="class-dialog-help">Gib der Klasse einen Namen.</p>
-      <label for="class-name-input">Klassenname</label>
+      <h2 id="class-dialog-title">New class</h2>
+      <p id="class-dialog-help">Choose a name for this class.</p>
+      <label for="class-name-input">Class name</label>
       <input id="class-name-input" type="text" maxlength="80" required autocomplete="off">
       <div class="dialog-actions">
-        <button class="button" id="cancel-class-button" type="button">Abbrechen</button>
-        <button class="button primary" type="submit" id="save-class-button">Erstellen</button>
+        <button class="button" id="cancel-class-button" type="button">Cancel</button>
+        <button class="button primary" type="submit" id="save-class-button">Create</button>
       </div>
     </form>
   </dialog>
@@ -351,9 +408,19 @@
     (() => {
       "use strict";
 
-      const STORAGE_KEY = "klassen-gluecksrad-v1";
+      const STORAGE_KEY = "classroom-spin-wheel-v1";
+      const LEGACY_STORAGE_KEY = "klassen-gluecksrad-v1";
       const COLORS = ["#f4bb65", "#70a58f", "#e88b70", "#8da6d1", "#c29ac9", "#e2a95c", "#68b7b0", "#da8298", "#9daa69", "#a992d1", "#e38f54", "#6b9bb1"];
-      const state = { classes: [], selectedClassId: null, rotation: 0, spinning: false, animationFrame: null, soundEnabled: true };
+      const state = {
+        classes: [],
+        selectedClassId: null,
+        rotation: 0,
+        spinning: false,
+        animationFrame: null,
+        soundEnabled: true,
+        darkMode: false,
+        sidebarCollapsed: false
+      };
       const $ = (selector) => document.querySelector(selector);
 
       const classSelect = $("#class-select");
@@ -367,6 +434,7 @@
       const classForm = $("#class-form");
       const classNameInput = $("#class-name-input");
       const toast = $("#toast");
+      const layout = $(".layout");
       let dialogMode = "create";
       let toastTimer;
       let audioContext = null;
@@ -396,44 +464,67 @@
         toastTimer = setTimeout(() => toast.classList.remove("visible"), 2800);
       }
 
+      function applyTheme() {
+        document.body.classList.toggle("dark-mode", state.darkMode);
+        const button = $("#theme-toggle");
+        button.textContent = state.darkMode ? "Light mode" : "Dark mode";
+        button.setAttribute("aria-pressed", String(state.darkMode));
+        button.title = state.darkMode ? "Switch to light mode" : "Switch to dark mode";
+        document.querySelector('meta[name="theme-color"]').content = state.darkMode ? "#171c19" : "#f5f5f2";
+      }
+
+      function applySidebarState() {
+        layout.classList.toggle("sidebar-collapsed", state.sidebarCollapsed);
+        $("#collapse-roster-button").setAttribute("aria-expanded", String(!state.sidebarCollapsed));
+        $("#expand-roster-button").setAttribute("aria-expanded", String(!state.sidebarCollapsed));
+        requestAnimationFrame(() => {
+          const group = currentClass();
+          drawWheel(wheelStudents(group), group ? group.winnerId : null);
+        });
+      }
+
       function saveState() {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify({
             version: 1,
             classes: state.classes,
-            selectedClassId: state.selectedClassId
+            selectedClassId: state.selectedClassId,
+            darkMode: state.darkMode,
+            sidebarCollapsed: state.sidebarCollapsed
           }));
-          $("#save-status").textContent = "Lokal gespeichert";
+          $("#save-status").textContent = "Saved in this browser";
         } catch (error) {
-          $("#save-status").textContent = "Speichern nicht möglich";
-          announce(`Der Browser konnte den Stand nicht speichern: ${error.message}`);
+          $("#save-status").textContent = "Could not save";
+          announce(`The browser could not save your data: ${error.message}`);
         }
       }
 
       function loadState() {
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+          const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
           if (!raw) return;
           const saved = JSON.parse(raw);
-          if (saved.version !== 1 || !Array.isArray(saved.classes)) throw new Error("Das gespeicherte Format wird nicht unterstützt.");
+          if (saved.version !== 1 || !Array.isArray(saved.classes)) throw new Error("The saved data format is not supported.");
           state.classes = normalizeClasses(saved.classes);
           state.selectedClassId = state.classes.some((item) => item.id === saved.selectedClassId)
             ? saved.selectedClassId
             : state.classes[0]?.id || null;
+          state.darkMode = saved.darkMode === true;
+          state.sidebarCollapsed = saved.sidebarCollapsed === true;
         } catch (error) {
-          announce(`Gespeicherte Daten konnten nicht geladen werden: ${error.message}`);
+          announce(`Saved data could not be loaded: ${error.message}`);
         }
       }
 
       function normalizeClasses(classes) {
-        if (!Array.isArray(classes)) throw new Error("Die Datei enthält keine Klassenliste.");
+        if (!Array.isArray(classes)) throw new Error("The file does not contain a class list.");
         return classes.map((item) => {
           if (!item || typeof item.name !== "string" || !item.name.trim() || !Array.isArray(item.students)) {
-            throw new Error("Eine Klasse hat keinen gültigen Namen oder keine Schülerliste.");
+            throw new Error("A class has an invalid name or student list.");
           }
           const students = item.students.map((student) => {
             if (!student || typeof student.name !== "string" || !student.name.trim()) {
-              throw new Error(`In der Klasse „${item.name}“ gibt es einen ungültigen Schülernamen.`);
+              throw new Error(`Class "${item.name}" contains an invalid student name.`);
             }
             return {
               id: typeof student.id === "string" && student.id ? student.id : makeId(),
@@ -460,7 +551,7 @@
 
       function formatDate(date) {
         const [year, month, day] = date.split("-").map(Number);
-        return new Intl.DateTimeFormat("de-DE").format(new Date(year, month - 1, day));
+        return new Intl.DateTimeFormat("en-GB").format(new Date(year, month - 1, day));
       }
 
       function localDateString() {
@@ -477,7 +568,7 @@
         if (state.classes.length === 0) {
           const option = document.createElement("option");
           option.value = "";
-          option.textContent = "Noch keine Klassen";
+          option.textContent = "No classes yet";
           classSelect.append(option);
           classSelect.disabled = true;
         } else {
@@ -495,13 +586,13 @@
         studentList.replaceChildren();
         const activeStudents = group ? group.students.filter((student) => student.active) : [];
         const total = group ? group.students.length : 0;
-        studentCount.textContent = `${activeStudents.length} von ${total} aktiv`;
-        activePill.textContent = `${activeStudents.length} aktiv`;
+        studentCount.textContent = `${activeStudents.length} of ${total} active`;
+        activePill.textContent = `${activeStudents.length} active`;
 
         if (!group || total === 0) {
           const empty = document.createElement("div");
           empty.className = "empty-list";
-          empty.textContent = group ? "Füge den ersten Namen hinzu." : "Erstelle eine Klasse, um loszulegen.";
+          empty.textContent = group ? "Add the first student to get started." : "Create a class to get started.";
           studentList.append(empty);
         } else {
           group.students.forEach((student) => {
@@ -511,7 +602,7 @@
             checkbox.type = "checkbox";
             checkbox.checked = student.active;
             checkbox.disabled = state.spinning;
-            checkbox.setAttribute("aria-label", `${student.active ? "Aktiv" : "Inaktiv"}: ${student.name}${student.lastSelectedAt ? `, zuletzt ausgewählt am ${formatDate(student.lastSelectedAt)}` : ""}`);
+            checkbox.setAttribute("aria-label", `${student.active ? "Active" : "Inactive"}: ${student.name}${student.lastSelectedAt ? `, last selected on ${formatDate(student.lastSelectedAt)}` : ""}`);
             checkbox.addEventListener("change", () => {
               student.active = checkbox.checked;
               if (student.active) {
@@ -531,7 +622,7 @@
               const date = document.createElement("span");
               date.className = "student-date";
               date.textContent = formatDate(student.lastSelectedAt);
-              date.title = `Ausgewählt am ${formatDate(student.lastSelectedAt)}`;
+              date.title = `Selected on ${formatDate(student.lastSelectedAt)}`;
               row.append(checkbox, name, date);
             } else {
               row.append(checkbox, name);
@@ -540,8 +631,8 @@
             remove.className = "remove-student";
             remove.type = "button";
             remove.textContent = "×";
-            remove.title = `${student.name} entfernen`;
-            remove.setAttribute("aria-label", `${student.name} entfernen`);
+            remove.title = `Remove ${student.name}`;
+            remove.setAttribute("aria-label", `Remove ${student.name}`);
             remove.disabled = state.spinning;
             remove.addEventListener("click", () => {
               group.students = group.students.filter((item) => item.id !== student.id);
@@ -564,7 +655,7 @@
         $("#import-button").disabled = state.spinning;
         $("#export-button").disabled = state.spinning || state.classes.length === 0;
         spinButton.disabled = state.spinning || activeStudents.length === 0;
-        spinButton.textContent = state.spinning ? "Das Rad dreht sich …" : activeStudents.length ? "Drehen" : "Niemand aktiv";
+        spinButton.textContent = state.spinning ? "Spinning…" : activeStudents.length ? "Spin" : "No active students";
         drawWheel(wheelStudents(group), group ? group.winnerId : null);
       }
 
@@ -585,6 +676,7 @@
         const scale = size / 500;
         context.setTransform(scale, 0, 0, scale, 0, 0);
         context.clearRect(0, 0, 500, 500);
+        const theme = getComputedStyle(document.body);
 
         const center = 250;
         const radius = 235;
@@ -595,13 +687,13 @@
         if (students.length === 0) {
           context.beginPath();
           context.arc(0, 0, radius, 0, Math.PI * 2);
-          context.fillStyle = "#eef0eb";
+          context.fillStyle = theme.getPropertyValue("--wheel-empty").trim();
           context.fill();
-          context.fillStyle = "#8b9188";
+          context.fillStyle = theme.getPropertyValue("--wheel-muted").trim();
           context.font = "600 16px 'Segoe UI', sans-serif";
           context.textAlign = "center";
           context.textBaseline = "middle";
-          context.fillText("Füge Schüler hinzu", 0, 0);
+          context.fillText("Add students", 0, 0);
         } else {
           const slice = (Math.PI * 2) / students.length;
           students.forEach((student, index) => {
@@ -612,12 +704,14 @@
             context.arc(0, 0, radius, start, end);
             context.closePath();
             const isWinner = student.id === winnerId;
-            context.fillStyle = student.active || isWinner ? COLORS[index % COLORS.length] : "#e5e8e2";
+            context.fillStyle = student.active || isWinner
+              ? COLORS[index % COLORS.length]
+              : theme.getPropertyValue("--wheel-inactive").trim();
             context.fill();
-            context.strokeStyle = isWinner ? "#176b52" : "rgba(255,255,255,.9)";
+            context.strokeStyle = isWinner ? theme.getPropertyValue("--wheel-winner").trim() : "rgba(255,255,255,.9)";
             context.lineWidth = isWinner ? 9 : 2;
             if (isWinner) {
-              context.shadowColor = "rgba(23,107,82,.42)";
+              context.shadowColor = state.darkMode ? "rgba(139,221,180,.48)" : "rgba(23,107,82,.42)";
               context.shadowBlur = 12;
             }
             context.stroke();
@@ -634,7 +728,11 @@
               }
               const fontSize = students.length > 24 ? 10 : students.length > 15 ? 11 : 13;
               context.font = `600 ${fontSize}px 'Segoe UI', sans-serif`;
-              context.fillStyle = isWinner ? "#104d3b" : student.active ? "#25302a" : "#8b9188";
+              context.fillStyle = isWinner
+                ? theme.getPropertyValue("--wheel-winner").trim()
+                : student.active
+                  ? theme.getPropertyValue("--wheel-text").trim()
+                  : theme.getPropertyValue("--wheel-muted").trim();
               context.textAlign = "center";
               context.textBaseline = "middle";
               const maxWidth = Math.max(24, 2 * radius * Math.sin(Math.min(Math.PI / 2, slice / 2)) * 0.72);
@@ -650,16 +748,16 @@
 
         context.beginPath();
         context.arc(0, 0, 33, 0, Math.PI * 2);
-        context.fillStyle = "#fff";
+        context.fillStyle = theme.getPropertyValue("--wheel-center").trim();
         context.fill();
-        context.strokeStyle = "rgba(34,45,38,.12)";
+        context.strokeStyle = state.darkMode ? "rgba(255,255,255,.15)" : "rgba(34,45,38,.12)";
         context.lineWidth = 2;
         context.stroke();
         context.restore();
 
         context.beginPath();
         context.arc(center, center, radius + 1, 0, Math.PI * 2);
-        context.strokeStyle = "#fff";
+        context.strokeStyle = theme.getPropertyValue("--wheel-outline").trim();
         context.lineWidth = 8;
         context.stroke();
       }
@@ -667,9 +765,9 @@
       function openClassDialog(mode) {
         dialogMode = mode;
         const isRename = mode === "rename";
-        $("#class-dialog-title").textContent = isRename ? "Klasse umbenennen" : "Neue Klasse";
-        $("#class-dialog-help").textContent = isRename ? "Ändere den Namen deiner Klasse." : "Gib der Klasse einen Namen.";
-        $("#save-class-button").textContent = isRename ? "Speichern" : "Erstellen";
+        $("#class-dialog-title").textContent = isRename ? "Rename class" : "New class";
+        $("#class-dialog-help").textContent = isRename ? "Change the name of this class." : "Choose a name for this class.";
+        $("#save-class-button").textContent = isRename ? "Save" : "Create";
         classNameInput.value = isRename ? currentClass()?.name || "" : "";
         classDialog.showModal();
         classNameInput.focus();
@@ -691,7 +789,7 @@
         if (!state.soundEnabled) return;
         try {
           if (!audioContext || audioContext.state !== "running" || !tickBuffer) {
-            throw new Error("Die Audioausgabe ist nicht bereit.");
+            throw new Error("Audio is not ready.");
           }
           const now = audioContext.currentTime;
           const noise = audioContext.createBufferSource();
@@ -717,17 +815,17 @@
         } catch (error) {
           state.soundEnabled = false;
           updateSoundButton();
-          announce(`Das Rattergeräusch konnte nicht abgespielt werden: ${error.message}`);
+          announce(`The click sound could not be played: ${error.message}`);
         }
       }
 
       async function prepareAudio() {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContextClass) throw new Error("Diese Browser-Version unterstützt die Audioausgabe nicht.");
+        if (!AudioContextClass) throw new Error("This browser does not support audio playback.");
 
         audioContext ||= new AudioContextClass();
         if (audioContext.state !== "running") await audioContext.resume();
-        if (audioContext.state !== "running") throw new Error("Der Browser hat die Audioausgabe nicht freigegeben.");
+        if (audioContext.state !== "running") throw new Error("The browser did not allow audio playback.");
 
         if (!tickBuffer) {
           tickBuffer = audioContext.createBuffer(1, Math.ceil(audioContext.sampleRate * 0.035), audioContext.sampleRate);
@@ -740,7 +838,7 @@
 
       function updateSoundButton() {
         const button = $("#sound-toggle");
-        button.textContent = state.soundEnabled ? "Rattern: an" : "Rattern: aus";
+        button.textContent = state.soundEnabled ? "Click sound: on" : "Click sound: off";
         button.setAttribute("aria-pressed", String(state.soundEnabled));
       }
 
@@ -757,7 +855,7 @@
           } catch (error) {
             state.soundEnabled = false;
             updateSoundButton();
-            announce(`Das Rattergeräusch konnte nicht gestartet werden: ${error.message}`);
+            announce(`The click sound could not be started: ${error.message}`);
           }
         }
 
@@ -828,7 +926,7 @@
           winner.active = false;
           winner.lastSelectedAt = localDateString();
           group.winnerId = winner.id;
-          result.innerHTML = `Ausgewählt: <strong></strong> <span>— bleibt markiert, bis zum nächsten Dreh.</span>`;
+          result.innerHTML = `Selected: <strong></strong> <span>— highlighted until the next spin.</span>`;
           result.querySelector("strong").textContent = winner.name;
           persistAndRender();
         }
@@ -839,8 +937,26 @@
       classSelect.addEventListener("change", () => {
         state.selectedClassId = classSelect.value || null;
         state.rotation = 0;
-        result.textContent = "Dreh das Rad, um jemanden auszuwählen.";
+        result.textContent = "Spin the wheel to pick a student.";
         persistAndRender();
+      });
+
+      $("#collapse-roster-button").addEventListener("click", () => {
+        state.sidebarCollapsed = true;
+        applySidebarState();
+        saveState();
+      });
+      $("#expand-roster-button").addEventListener("click", () => {
+        state.sidebarCollapsed = false;
+        applySidebarState();
+        saveState();
+      });
+      $("#theme-toggle").addEventListener("click", () => {
+        state.darkMode = !state.darkMode;
+        applyTheme();
+        const group = currentClass();
+        drawWheel(wheelStudents(group), group ? group.winnerId : null);
+        saveState();
       });
 
       $("#new-class-button").addEventListener("click", () => openClassDialog("create"));
@@ -872,7 +988,7 @@
 
       $("#delete-class-button").addEventListener("click", () => {
         const group = currentClass();
-        if (!group || !window.confirm(`„${group.name}“ und alle zugehörigen Schüler löschen?`)) return;
+        if (!group || !window.confirm(`Delete "${group.name}" and all of its students?`)) return;
         state.classes = state.classes.filter((item) => item.id !== group.id);
         state.selectedClassId = state.classes[0]?.id || null;
         state.rotation = 0;
@@ -906,15 +1022,15 @@
 
       $("#export-button").addEventListener("click", () => {
         if (state.classes.length === 0) {
-          announce("Es gibt noch keine Klassen zum Exportieren.");
+          announce("There are no classes to export yet.");
           return;
         }
-        const data = { app: "Klassen-Glücksrad", version: 1, classes: state.classes };
+        const data = { app: "Classroom Spin Wheel", version: 1, classes: state.classes };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = "klassen-gluecksrad.json";
+        link.download = "classroom-spin-wheel.json";
         document.body.append(link);
         link.click();
         link.remove();
@@ -928,15 +1044,15 @@
         try {
           const data = JSON.parse(await file.text());
           const classes = normalizeClasses(data.classes);
-          if (!window.confirm(`${classes.length} ${classes.length === 1 ? "Klasse" : "Klassen"} laden? Der aktuelle Stand wird ersetzt.`)) return;
+          if (!window.confirm(`Load ${classes.length} ${classes.length === 1 ? "class" : "classes"}? This will replace the current data.`)) return;
           state.classes = classes;
           state.selectedClassId = classes[0]?.id || null;
           state.rotation = 0;
           result.textContent = "";
           persistAndRender();
-          announce("Klassen erfolgreich geladen.");
+          announce("Classes imported successfully.");
         } catch (error) {
-          announce(`Import fehlgeschlagen: ${error.message}`);
+          announce(`Import failed: ${error.message}`);
         } finally {
           event.target.value = "";
         }
@@ -955,9 +1071,11 @@
       }
 
       loadState();
+      applyTheme();
+      applySidebarState();
       updateSoundButton();
       render();
-      if (state.classes.length === 0) result.textContent = "Erstelle eine Klasse und füge Schüler hinzu.";
+      if (state.classes.length === 0) result.textContent = "Create a class and add students to get started.";
     })();
   </script>
 </body>
