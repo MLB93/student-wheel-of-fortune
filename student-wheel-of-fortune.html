@@ -260,7 +260,22 @@
       filter: drop-shadow(0 3px 2px rgb(0 0 0 / 18%));
     }
 
-    .spin-button { width: min(100%, 250px); min-height: 53px; border-radius: 15px; font-size: 16px; }
+    .spin-button-slot {
+      display: grid;
+      width: min(100%, 510px);
+      height: 95px;
+      flex: 0 0 95px;
+      place-items: center;
+    }
+    .spin-button {
+      width: min(100%, 250px);
+      min-height: 53px;
+      border-radius: 15px;
+      font-size: 16px;
+      position: relative;
+      transition: left .16s ease-out, top .16s ease-out;
+    }
+    .spin-button:hover:not(:disabled) { transform: none; }
     .result { min-height: 29px; margin-top: 13px; color: var(--muted); font-size: 14px; text-align: center; }
     .result strong { color: var(--green); font-size: 17px; }
     .keyboard-hint { margin: 9px 0 0; color: #92978e; font-size: 11px; text-align: center; }
@@ -399,7 +414,9 @@
           <div class="pointer" aria-hidden="true"></div>
           <canvas id="wheel" aria-label="Wheel showing all students; inactive students are dimmed and the latest winner is highlighted"></canvas>
         </div>
-        <button class="button primary spin-button" id="spin-button" type="button">Spin</button>
+        <div class="spin-button-slot">
+          <button class="button primary spin-button" id="spin-button" type="button">Spin</button>
+        </div>
         <div class="result" id="result" aria-live="polite">Choose a class and spin the wheel.</div>
         <p class="keyboard-hint">Tip: press Space to spin</p>
       </section>
@@ -426,6 +443,15 @@
       <div class="dialog-actions">
         <button class="button" id="confirmation-cancel" type="button">Cancel</button>
         <button class="button primary" id="confirmation-accept" type="button">Continue</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="april-fools-dialog" aria-labelledby="april-fools-title">
+    <div class="dialog-content">
+      <h2 id="april-fools-title">April April!</h2>
+      <div class="dialog-actions">
+        <button class="button primary" id="april-fools-close" type="button">Close</button>
       </div>
     </div>
   </dialog>
@@ -468,6 +494,9 @@
       let toastTimer;
       let audioContext = null;
       let tickBuffer = null;
+      let aprilFoolsDodgeCount = 0;
+      let aprilFoolsPlayed = false;
+      const aprilFoolsDialog = $("#april-fools-dialog");
 
       function makeId() {
         return typeof crypto.randomUUID === "function"
@@ -931,6 +960,51 @@
         button.setAttribute("aria-pressed", String(state.soundEnabled));
       }
 
+      function isAprilFoolsDay() {
+        const now = new Date();
+        return now.getMonth() === 3 && now.getDate() === 1;
+      }
+
+      function dodgeSpinButton(event) {
+        const slot = spinButton.parentElement;
+        const slotBounds = slot.getBoundingClientRect();
+        const currentBounds = spinButton.getBoundingClientRect();
+        const maxX = Math.max(0, (slot.clientWidth - spinButton.offsetWidth) / 2);
+        const maxY = Math.max(0, (slot.clientHeight - spinButton.offsetHeight) / 2);
+        let offsetX = 0;
+        let offsetY = 0;
+        const baseLeft = (slot.clientWidth - spinButton.offsetWidth) / 2;
+        const baseTop = (slot.clientHeight - spinButton.offsetHeight) / 2;
+        for (let attempt = 0; attempt < 20; attempt++) {
+          offsetX = (Math.random() * 2 - 1) * maxX;
+          offsetY = (Math.random() * 2 - 1) * maxY;
+          const targetLeft = slotBounds.left + baseLeft + offsetX;
+          const targetTop = slotBounds.top + baseTop + offsetY;
+          const pointerStillOverButton = event.clientX >= targetLeft
+            && event.clientX <= targetLeft + spinButton.offsetWidth
+            && event.clientY >= targetTop
+            && event.clientY <= targetTop + spinButton.offsetHeight;
+          const movement = Math.hypot(
+            targetLeft - currentBounds.left,
+            targetTop - currentBounds.top
+          );
+          if (!pointerStillOverButton && movement >= 35) break;
+          if (attempt === 19) {
+            offsetX = event.clientX < slotBounds.left + slotBounds.width / 2 ? maxX : -maxX;
+            offsetY = event.clientY < slotBounds.top + slotBounds.height / 2 ? maxY : -maxY;
+          }
+        }
+        spinButton.style.setProperty("left", `${offsetX.toFixed(1)}px`, "important");
+        spinButton.style.setProperty("top", `${offsetY.toFixed(1)}px`, "important");
+      }
+
+      function finishAprilFools() {
+        if (aprilFoolsDialog.open) aprilFoolsDialog.close();
+        spinButton.style.removeProperty("left");
+        spinButton.style.removeProperty("top");
+        spin();
+      }
+
       async function spin() {
         const group = currentClass();
         const activeStudents = group ? group.students.filter((student) => student.active) : [];
@@ -1105,7 +1179,25 @@
         input.focus();
       });
 
-      spinButton.addEventListener("click", spin);
+      spinButton.addEventListener("click", (event) => {
+        if (!isAprilFoolsDay() || aprilFoolsPlayed || event.detail === 0) {
+          spin();
+          return;
+        }
+        if (aprilFoolsDodgeCount < 3) {
+          aprilFoolsDodgeCount++;
+          dodgeSpinButton(event);
+          return;
+        }
+        aprilFoolsPlayed = true;
+        aprilFoolsDialog.showModal();
+        $("#april-fools-close").focus();
+      });
+      $("#april-fools-close").addEventListener("click", finishAprilFools);
+      aprilFoolsDialog.addEventListener("cancel", (event) => {
+        event.preventDefault();
+        finishAprilFools();
+      });
       document.addEventListener("keydown", (event) => {
         const tagName = document.activeElement?.tagName;
         if (event.code === "Space" && !event.repeat && !["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(tagName) && !classDialog.open) {
