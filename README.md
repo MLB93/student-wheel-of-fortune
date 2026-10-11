@@ -1,11 +1,11 @@
-# Classroom Spin Wheel
+# Student Wheel of Fortune
 
 An animated wheel for randomly selecting students. The app is a single HTML file and needs no Python, web server, installation, or internet connection.
 
 ## Getting started
 
-1. Download [index.html](./index.html) or open it from the project folder.
-2. Double-click `index.html` to open it in Microsoft Edge, Chrome, or Firefox.
+1. Download [student-wheel-of-fortune.html](./student-wheel-of-fortune.html) or open it from the project folder.
+2. Double-click `student-wheel-of-fortune.html` to open it in Microsoft Edge, Chrome, or Firefox.
 3. Create a class, add students, and select **Spin**.
 
 ## Features
@@ -17,6 +17,7 @@ An animated wheel for randomly selecting students. The app is a single HTML file
 - Manually reactivating a student clears their selection date and winner highlight.
 - Class lists, active states, selection dates, the current winner, theme, and sidebar preference are saved in the browser.
 - Collapse the student sidebar to make more room for the wheel.
+- The selected class name stays visible above the wheel while the sidebar is collapsed.
 - Switch between light and dark mode.
 - The wheel has an optional click sound. Near the end, it slows almost to a stop at a segment boundary and sometimes slips into the neighboring segment at the last moment.
 - Export a backup as JSON or import a previously exported file.

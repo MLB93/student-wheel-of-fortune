@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f5f2">
-  <title>Classroom Spin Wheel</title>
+  <title>Student Wheel of Fortune</title>
   <style>
     :root {
       color-scheme: light;
@@ -113,9 +113,12 @@
 
     .layout.sidebar-collapsed { grid-template-columns: minmax(0, 1fr); }
     .layout.sidebar-collapsed .roster-panel { display: none; }
-    .show-roster-button { display: none; }
+    .wheel-heading .show-roster-button { display: none; }
     .layout.sidebar-collapsed .show-roster-button { display: inline-flex; }
     .heading-title { display: flex; align-items: center; gap: 10px; }
+    .selected-class-label { display: none; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .layout.sidebar-collapsed .selected-class-label { display: inline; }
+    .selected-class-label { padding-left: 10px; border-left: 1px solid var(--line); }
 
     .panel, .wheel-panel {
       border: 1px solid var(--line);
@@ -321,7 +324,7 @@
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">✳</div>
         <div>
-          <h1>Classroom Spin Wheel</h1>
+          <h1>Student Wheel of Fortune</h1>
           <p>Who's up next?</p>
         </div>
       </div>
@@ -372,6 +375,7 @@
           <div class="heading-title">
             <button class="button small show-roster-button" id="expand-roster-button" type="button" aria-label="Show student list">☷ Students</button>
             <h2 id="wheel-title">Spin the wheel</h2>
+            <span class="selected-class-label" id="selected-class-label"></span>
           </div>
           <span class="active-pill" id="active-pill">0 active</span>
         </div>
@@ -509,6 +513,7 @@
           state.selectedClassId = state.classes.some((item) => item.id === saved.selectedClassId)
             ? saved.selectedClassId
             : state.classes[0]?.id || null;
+          if (raw && !localStorage.getItem(STORAGE_KEY)) saveState();
           state.darkMode = saved.darkMode === true;
           state.sidebarCollapsed = saved.sidebarCollapsed === true;
         } catch (error) {
@@ -583,6 +588,7 @@
         }
 
         const group = currentClass();
+        $("#selected-class-label").textContent = group ? `Class: ${group.name}` : "No class selected";
         studentList.replaceChildren();
         const activeStudents = group ? group.students.filter((student) => student.active) : [];
         const total = group ? group.students.length : 0;
@@ -1023,12 +1029,12 @@
           announce("There are no classes to export yet.");
           return;
         }
-        const data = { app: "Classroom Spin Wheel", version: 1, classes: state.classes };
+        const data = { app: "Student Wheel of Fortune", version: 1, classes: state.classes };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = "classroom-spin-wheel.json";
+        link.download = "student-wheel-of-fortune.json";
         document.body.append(link);
         link.click();
         link.remove();
