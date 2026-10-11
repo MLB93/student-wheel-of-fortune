@@ -1,28 +1,39 @@
 # Student Wheel of Fortune
 
-An animated wheel for randomly selecting students. The app is a single HTML file and needs no Python, web server, installation, or internet connection.
+A simple, animated wheel for randomly selecting students in class. The app is a single HTML file that runs locally in your browser—no installation, internet connection, Python, or web server required.
 
-## Getting started
+## Get started
 
-1. Download [student-wheel-of-fortune.html](./student-wheel-of-fortune.html) or open it from the project folder.
-2. Double-click `student-wheel-of-fortune.html` to open it in Microsoft Edge, Chrome, or Firefox.
-3. Create a class, add students, and select **Spin**.
+1. Open [student-wheel-of-fortune.html](./student-wheel-of-fortune.html) in Microsoft Edge, Google Chrome, or Mozilla Firefox.
+2. Create a class with **＋ Class**.
+3. Add students to the selected class.
+4. Select **Spin** to choose a student.
 
-## Features
+## Using the app
 
-- Manage multiple classes and their student lists.
-- Add or remove students, or manually mark them active or inactive.
-- The selected student remains highlighted on the wheel, is marked inactive in the list, and gets the selection date.
-- Inactive segments remain visible until the next spin, then are removed from the wheel.
-- Manually reactivating a student clears their selection date and winner highlight.
-- Class lists, active states, selection dates, the current winner, theme, sidebar preference, and last-export timestamp are saved in the browser.
-- Collapse the student sidebar to make more room for the wheel.
-- On desktop, the app fits the window and long class lists scroll inside the sidebar.
-- The selected class name stays visible above the wheel while the sidebar is collapsed.
-- Find save status, import/export, theme, and sound controls in the student sidebar.
-- Switch between light and dark mode.
-- The wheel has an optional click sound. Near the end, it slows almost to a stop at a segment boundary and sometimes slips into the neighboring segment at the last moment.
-- Export a backup as JSON or import a previously exported file. The app displays the last export date and includes that timestamp in the JSON backup.
-- Press Space to spin when an input, button, or select control is not focused.
+### Classes and students
 
-Data is automatically saved in the browser on this device. This browser-based app cannot silently overwrite a backup file; use **Export** to download a JSON backup when you want a portable copy. Its last-export date is shown in the app and travels with the JSON file. Importing a backup restores that timestamp. The JSON file contains student names, activity states, and selection dates, so keep it private.
+- Create and rename classes, and switch between them with the class selector.
+- Add or remove students. Use the checkbox beside a student to mark them active or inactive.
+- After a spin, the selected student is marked inactive, gets the selection date, and remains highlighted on the wheel until the next spin.
+- Inactive wheel segments are removed when the next spin begins. Reactivating a student clears their selection date and winner highlight.
+- Use **Rename** or **Delete class** below the student list to manage the selected class.
+
+### Wheel and display
+
+- The wheel slows down near the end and may slip into a neighboring segment for a suspenseful finish.
+- Turn the optional click sound on or off in the sidebar.
+- Switch between light and dark mode in the sidebar.
+- Collapse the student sidebar to give the wheel more room. The selected class name remains visible while it is collapsed.
+- On desktop, the app fits the window height and long student lists scroll within the sidebar. On smaller screens, the page can scroll normally.
+- Press **Space** to spin when a text field, button, or selection control is not focused.
+
+## Saving and backups
+
+The app automatically saves classes, student activity and selection dates, the current winner, theme, sidebar preference, and the last-export timestamp in the browser on this device.
+
+This local browser storage is not a portable backup and may be lost if browser data is cleared. To create a backup, select **Export** in the sidebar. The downloaded JSON file includes the export date and can be loaded later with **Import**. Importing replaces the current classes and restores the timestamp recorded in the backup.
+
+The browser cannot silently overwrite a backup file. Export a new JSON file whenever you want an up-to-date portable backup.
+
+> Backup files contain student names and selection history. Store and share them with care.
