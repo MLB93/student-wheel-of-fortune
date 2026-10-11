@@ -720,12 +720,9 @@
             if (students.length <= 40) {
               const middle = start + slice / 2;
               context.save();
-              const labelRadius = radius * 0.64;
-              if (students.length > 2) {
-                context.rotate(middle);
-                context.translate(labelRadius, 0);
-                if (Math.cos(middle) < 0) context.rotate(Math.PI);
-              }
+              const labelRadius = radius * 0.42;
+              context.rotate(middle);
+              context.translate(labelRadius, 0);
               const fontSize = students.length > 24 ? 10 : students.length > 15 ? 11 : 13;
               context.font = `600 ${fontSize}px 'Segoe UI', sans-serif`;
               context.fillStyle = isWinner
@@ -733,14 +730,15 @@
                 : student.active
                   ? theme.getPropertyValue("--wheel-text").trim()
                   : theme.getPropertyValue("--wheel-muted").trim();
-              context.textAlign = "center";
+              context.textAlign = "left";
               context.textBaseline = "middle";
-              const maxWidth = Math.max(24, 2 * radius * Math.sin(Math.min(Math.PI / 2, slice / 2)) * 0.72);
+              const maxWidth = Math.max(24, Math.min(
+                2 * radius * Math.sin(Math.min(Math.PI / 2, slice / 2)) * 0.72,
+                radius - labelRadius - 12
+              ));
               let label = `${isWinner ? "★ " : ""}${student.name}`;
               while (context.measureText(label).width > maxWidth && label.length > 3) label = `${label.slice(0, -2)}…`;
-              const x = students.length > 2 ? 0 : labelRadius * Math.cos(middle);
-              const y = students.length > 2 ? 0 : labelRadius * Math.sin(middle);
-              context.fillText(label, x, y, maxWidth);
+              context.fillText(label, 0, 0, maxWidth);
               context.restore();
             }
           });
