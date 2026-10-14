@@ -127,6 +127,12 @@
 
     .layout.sidebar-collapsed { grid-template-columns: minmax(0, 1fr); }
     .layout.sidebar-collapsed .roster-panel { display: none; }
+    .layout.sidebar-collapsed .wheel-panel { padding: 20px 22px; }
+    .layout.sidebar-collapsed .wheel-wrap {
+      width: min(100%, 800px, calc(100dvh - 330px));
+      margin: 8px auto 3px;
+    }
+    .layout.sidebar-collapsed .spin-button-slot { height: 70px; flex-basis: 70px; }
     .wheel-heading .show-roster-button { display: none; }
     .layout.sidebar-collapsed .show-roster-button { display: inline-flex; }
     .heading-title { display: flex; align-items: center; gap: 10px; }
@@ -242,7 +248,7 @@
 
     .wheel-heading { align-self: stretch; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .active-pill { padding: 6px 10px; border-radius: 20px; background: var(--green-soft); color: var(--green); font-size: 12px; font-weight: 700; }
-    .wheel-wrap { position: relative; width: min(100%, 510px, calc(100dvh - 525px)); margin: 22px auto 13px; }
+    .wheel-wrap { position: relative; width: min(100%, 600px, calc(100dvh - 460px)); margin: 22px auto 13px; }
     canvas { display: block; width: 100%; height: auto; overflow: visible; }
 
     .pointer {
@@ -320,7 +326,7 @@
       .layout { grid-template-columns: minmax(250px, .85fr) minmax(0, 1.15fr); gap: 15px; }
       .panel { padding: 18px; }
       .wheel-panel { padding: 26px 20px; }
-      .wheel-wrap { width: min(100%, 410px, calc(100dvh - 510px)); }
+      .wheel-wrap { width: min(100%, 480px, calc(100dvh - 440px)); }
     }
 
     @media (max-width: 650px) {
@@ -332,7 +338,10 @@
       .brand p { display: none; }
       .layout { flex: initial; grid-template-columns: 1fr; grid-template-rows: auto; }
       .wheel-panel { min-height: 0; grid-row: 1; padding: 22px 16px 20px; }
-      .wheel-wrap { width: min(100%, 400px); margin: 14px auto 8px; }
+      .wheel-wrap { width: min(100%, 480px); margin: 14px auto 8px; }
+      .layout.sidebar-collapsed .wheel-panel { padding: 22px 16px 20px; }
+      .layout.sidebar-collapsed .wheel-wrap { width: min(100%, 480px); }
+      .layout.sidebar-collapsed .spin-button-slot { height: 95px; flex-basis: 95px; }
       .panel { padding: 19px; }
       .student-list { flex: 0 1 280px; max-height: 280px; min-height: 135px; }
     }
@@ -806,7 +815,7 @@
           context.fillStyle = theme.getPropertyValue("--wheel-empty").trim();
           context.fill();
           context.fillStyle = theme.getPropertyValue("--wheel-muted").trim();
-          context.font = "600 16px 'Segoe UI', sans-serif";
+          context.font = "600 19px 'Segoe UI', sans-serif";
           context.textAlign = "center";
           context.textBaseline = "middle";
           context.fillText("Add students", 0, 0);
@@ -839,7 +848,7 @@
               const labelRadius = radius * 0.42;
               context.rotate(middle);
               context.translate(labelRadius, 0);
-              const fontSize = students.length > 24 ? 10 : students.length > 15 ? 11 : 13;
+              const fontSize = students.length > 24 ? 14 : students.length > 15 ? 16 : 19;
               context.font = `600 ${fontSize}px 'Segoe UI', sans-serif`;
               context.fillStyle = isWinner
                 ? theme.getPropertyValue("--wheel-winner").trim()
@@ -848,10 +857,7 @@
                   : theme.getPropertyValue("--wheel-muted").trim();
               context.textAlign = "left";
               context.textBaseline = "middle";
-              const maxWidth = Math.max(24, Math.min(
-                2 * radius * Math.sin(Math.min(Math.PI / 2, slice / 2)) * 0.72,
-                radius - labelRadius - 12
-              ));
+              const maxWidth = Math.max(24, radius - labelRadius - 12);
               let label = `${isWinner ? "★ " : ""}${student.name}`;
               while (context.measureText(label).width > maxWidth && label.length > 3) label = `${label.slice(0, -2)}…`;
               context.fillText(label, 0, 0, maxWidth);
