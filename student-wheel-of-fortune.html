@@ -75,6 +75,7 @@
     button, input, textarea { font: inherit; }
     button { cursor: pointer; }
     button:disabled { cursor: not-allowed; opacity: .55; }
+    button[hidden] { display: none; }
 
     .app-shell {
       display: flex;
@@ -114,6 +115,7 @@
     .save-status, .export-status { color: var(--muted); font-size: 11px; }
     .sidebar-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
     .sidebar-actions .button { min-width: 0; }
+    .sidebar-actions .button:last-child { grid-column: 1 / -1; }
 
     .layout {
       display: grid;
@@ -405,6 +407,7 @@
             <button class="button small" id="sound-toggle" type="button" aria-pressed="true">Click sound: on</button>
             <button class="button small" id="import-button" type="button" title="Load classes from a JSON file">↓ Import</button>
             <button class="button small" id="export-button" type="button" title="Save classes as a JSON file">↑ Export</button>
+            <button class="button small" id="storage-settings-button" type="button" title="Manage local storage and saved data">Local data settings</button>
           </div>
           <input class="visually-hidden" id="import-file" type="file" accept=".json,application/json">
         </div>
@@ -465,6 +468,20 @@
     </div>
   </dialog>
 
+  <dialog id="storage-dialog" aria-labelledby="storage-dialog-title" aria-describedby="storage-dialog-message">
+    <div class="dialog-content">
+      <h2 id="storage-dialog-title">Choose how this app handles your data</h2>
+      <p id="storage-dialog-message"></p>
+      <p class="storage-hosting-note">If this app is hosted on GitHub Pages, GitHub may process technical visit data such as IP addresses. See GitHub's <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">Privacy Statement</a>.</p>
+      <div class="dialog-actions">
+        <button class="button danger" id="storage-decline-button" type="button">Use without saving</button>
+        <button class="button" id="storage-cancel-button" type="button" hidden>Cancel</button>
+        <button class="button danger" id="storage-revoke-button" type="button" hidden>Turn off and delete saved data</button>
+        <button class="button primary" id="storage-accept-button" type="button">Allow local saving</button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -473,6 +490,7 @@
 
       const STORAGE_KEY = "classroom-spin-wheel-v1";
       const LEGACY_STORAGE_KEY = "klassen-gluecksrad-v1";
+      const STORAGE_CONSENT_KEY = "classroom-spin-wheel-storage-consent";
       const COLORS = ["#f4bb65", "#70a58f", "#e88b70", "#8da6d1", "#c29ac9", "#e2a95c", "#68b7b0", "#da8298", "#9daa69", "#a992d1", "#e38f54", "#6b9bb1"];
       const state = {
         classes: [],
@@ -483,7 +501,8 @@
         soundEnabled: true,
         darkMode: false,
         sidebarCollapsed: false,
-        lastExportedAt: null
+        lastExportedAt: null,
+        storageConsent: false
       };
       const $ = (selector) => document.querySelector(selector);
 
@@ -499,6 +518,7 @@
       const classNameInput = $("#class-name-input");
       const toast = $("#toast");
       const layout = $(".layout");
+      const storageDialog = $("#storage-dialog");
       let dialogMode = "create";
       let toastTimer;
       let audioContext = null;
@@ -597,7 +617,17 @@
           : "Last JSON export: never";
       }
 
+      function updateStorageStatus() {
+        $("#save-status").textContent = state.storageConsent
+          ? "Saved in this browser"
+          : "Not saved (this session only)";
+      }
+
       function saveState() {
+        if (!state.storageConsent) {
+          updateStorageStatus();
+          return;
+        }
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify({
             version: 1,
@@ -607,7 +637,7 @@
             sidebarCollapsed: state.sidebarCollapsed,
             lastExportedAt: state.lastExportedAt
           }));
-          $("#save-status").textContent = "Saved in this browser";
+          updateStorageStatus();
         } catch (error) {
           $("#save-status").textContent = "Could not save";
           announce(`The browser could not save your data: ${error.message}`);
@@ -786,6 +816,88 @@
 
       function persistAndRender() {
         saveState();
+        render();
+      }
+
+      function openStorageDialog(mode) {
+        const initialChoice = mode === "initial";
+        $("#storage-dialog-title").textContent = initialChoice
+          ? "Choose how this app handles your data"
+          : "Local data settings";
+        $("#storage-dialog-message").textContent = initialChoice
+          ? "The app can save class names, student names, selection dates, and preferences in this browser. The app does not upload data stored by this feature. If you continue without saving, previously saved data from this app on this device will be deleted. New data will remain only until you close or reload the page. You can still import and export JSON backups."
+          : state.storageConsent
+            ? "Local saving is enabled. You can turn it off and delete the app's saved data from this browser. Your current session will continue without saving."
+            : "Local saving is off. Changes are kept only until you close or reload this page. You can enable local saving below.";
+        $("#storage-decline-button").hidden = !initialChoice;
+        $("#storage-cancel-button").hidden = initialChoice;
+        $("#storage-revoke-button").hidden = initialChoice || !state.storageConsent;
+        $("#storage-accept-button").textContent = initialChoice || !state.storageConsent
+          ? "Allow local saving"
+          : "Keep local saving";
+        storageDialog.dataset.mode = mode;
+        storageDialog.showModal();
+        requestAnimationFrame(() => {
+          const preferredButton = initialChoice ? $("#storage-decline-button") : $("#storage-cancel-button");
+          if (storageDialog.open) preferredButton.focus();
+        });
+      }
+
+      function removeSavedData() {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+        localStorage.removeItem(STORAGE_CONSENT_KEY);
+      }
+
+      function useWithoutSaving() {
+        state.storageConsent = false;
+        try {
+          removeSavedData();
+          storageDialog.close();
+          updateStorageStatus();
+        } catch (error) {
+          storageDialog.close();
+          updateStorageStatus();
+          announce(`The app will not save new data, but previously saved data could not be deleted: ${error.message}`);
+        }
+        render();
+        if (state.classes.length === 0) result.textContent = "Create a class and add students to get started.";
+      }
+
+      function allowLocalSaving() {
+        const settingsMode = storageDialog.dataset.mode === "settings";
+        if (settingsMode && state.storageConsent) {
+          storageDialog.close();
+          return;
+        }
+        try {
+          localStorage.setItem(STORAGE_CONSENT_KEY, "granted");
+          state.storageConsent = true;
+          loadState();
+          if (settingsMode) saveState();
+        } catch (error) {
+          state.storageConsent = false;
+          announce(`Local saving could not be enabled: ${error.message}`);
+        }
+        storageDialog.close();
+        applyTheme();
+        applySidebarState();
+        updateSoundButton();
+        updateStorageStatus();
+        render();
+        if (state.classes.length === 0) result.textContent = "Create a class and add students to get started.";
+      }
+
+      function revokeLocalSaving() {
+        state.storageConsent = false;
+        try {
+          removeSavedData();
+          announce("Local saving is off and saved app data was deleted from this browser.");
+        } catch (error) {
+          announce(`Local saving is off, but saved app data could not be fully deleted: ${error.message}`);
+        }
+        storageDialog.close();
+        updateStorageStatus();
         render();
       }
 
@@ -1127,6 +1239,17 @@
         drawWheel(wheelStudents(group), group ? group.winnerId : null);
         saveState();
       });
+      $("#storage-settings-button").addEventListener("click", () => openStorageDialog("settings"));
+      $("#storage-decline-button").addEventListener("click", useWithoutSaving);
+      $("#storage-accept-button").addEventListener("click", allowLocalSaving);
+      $("#storage-cancel-button").addEventListener("click", () => storageDialog.close());
+      $("#storage-revoke-button").addEventListener("click", async () => {
+        if (!await confirmAction("Turn off local saving and delete the app's saved data from this browser?", "Turn off and delete")) return;
+        revokeLocalSaving();
+      });
+      storageDialog.addEventListener("cancel", (event) => {
+        if (storageDialog.dataset.mode === "initial") event.preventDefault();
+      });
 
       $("#new-class-button").addEventListener("click", () => openClassDialog("create"));
       $("#rename-class-button").addEventListener("click", () => openClassDialog("rename"));
@@ -1274,12 +1397,30 @@
         });
       }
 
-      loadState();
-      applyTheme();
-      applySidebarState();
-      updateSoundButton();
-      render();
-      if (state.classes.length === 0) result.textContent = "Create a class and add students to get started.";
+      let previouslyGrantedStorageConsent = false;
+      try {
+        previouslyGrantedStorageConsent = localStorage.getItem(STORAGE_CONSENT_KEY) === "granted";
+      } catch (error) {
+        announce(`Local storage is unavailable: ${error.message}`);
+      }
+
+      if (previouslyGrantedStorageConsent) {
+        state.storageConsent = true;
+        loadState();
+        applyTheme();
+        applySidebarState();
+        updateSoundButton();
+        updateStorageStatus();
+        render();
+        if (state.classes.length === 0) result.textContent = "Create a class and add students to get started.";
+      } else {
+        applyTheme();
+        applySidebarState();
+        updateSoundButton();
+        updateStorageStatus();
+        render();
+        openStorageDialog("initial");
+      }
     })();
   </script>
 </body>

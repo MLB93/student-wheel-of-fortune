@@ -30,9 +30,13 @@ A simple, animated wheel for randomly selecting students in class. The app is a 
 
 ## Saving and backups
 
-The app automatically saves classes, student activity and selection dates, the current winner, theme, sidebar preference, and the last-export timestamp in the browser on this device.
+When you first open the app, choose whether to allow local saving. If you allow it, classes, student activity and selection dates, the current winner, theme, sidebar preference, and the last-export timestamp are saved in this browser on this device. The app's local-storage feature does not upload this saved data.
 
-This local browser storage is not a portable backup and may be lost if browser data is cleared. To create a backup, select **Export** in the sidebar. The downloaded JSON file includes the export date and can be loaded later with **Import**. Importing replaces the current classes and restores the timestamp recorded in the backup.
+If you continue without saving, existing app data in this browser is deleted and new changes are kept only until you close or reload the page. The app asks again the next time you open or reload it. You can still use **Import** and **Export** to work with JSON backups. You can change the local-saving choice or turn it off and delete saved app data at any time with **Local data settings** in the sidebar.
+
+When hosted on GitHub Pages, GitHub may process technical visit data such as IP addresses. See [GitHub's Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement). The app's local-saving choice does not control GitHub's hosting or logging.
+
+Local browser storage is not a portable backup and may be lost if browser data is cleared. To create a backup, select **Export** in the sidebar. The downloaded JSON file includes the export date and can be loaded later with **Import**. Importing replaces the current classes and restores the timestamp recorded in the backup.
 
 The browser cannot silently overwrite a backup file. Export a new JSON file whenever you want an up-to-date portable backup.
 
