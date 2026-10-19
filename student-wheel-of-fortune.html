@@ -115,7 +115,6 @@
     .save-status, .export-status { color: var(--muted); font-size: 11px; }
     .sidebar-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
     .sidebar-actions .button { min-width: 0; }
-    .sidebar-actions .button:last-child { grid-column: 1 / -1; }
 
     .layout {
       display: grid;
@@ -408,6 +407,7 @@
             <button class="button small" id="import-button" type="button" title="Load classes from a JSON file">↓ Import</button>
             <button class="button small" id="export-button" type="button" title="Save classes as a JSON file">↑ Export</button>
             <button class="button small" id="storage-settings-button" type="button" title="Manage local storage and saved data">Local data settings</button>
+            <a class="button small" href="https://github.com/MLB93/student-wheel-of-fortune#readme" target="_blank" rel="noopener noreferrer">Help / README</a>
           </div>
           <input class="visually-hidden" id="import-file" type="file" accept=".json,application/json">
         </div>
