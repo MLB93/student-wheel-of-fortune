@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="16" fill="#176b52"/>
+  <path d="M32 32V8A24 24 0 0 1 48.97 15.03Z" fill="#f4bb65" stroke="#fff" stroke-width="1.5"/>
+  <path d="M32 32 48.97 15.03A24 24 0 0 1 56 32Z" fill="#70a58f" stroke="#fff" stroke-width="1.5"/>
+  <path d="M32 32h24A24 24 0 0 1 48.97 48.97Z" fill="#e88b70" stroke="#fff" stroke-width="1.5"/>
+  <path d="M32 32 48.97 48.97A24 24 0 0 1 32 56Z" fill="#8da6d1" stroke="#fff" stroke-width="1.5"/>
+  <path d="M32 32v24A24 24 0 0 1 15.03 48.97Z" fill="#c29ac9" stroke="#fff" stroke-width="1.5"/>
+  <path d="M32 32 15.03 48.97A24 24 0 0 1 8 32Z" fill="#e2a95c" stroke="#fff" stroke-width="1.5"/>
+  <path d="M32 32H8A24 24 0 0 1 15.03 15.03Z" fill="#68b7b0" stroke="#fff" stroke-width="1.5"/>
+  <path d="M32 32 15.03 15.03A24 24 0 0 1 32 8Z" fill="#da8298" stroke="#fff" stroke-width="1.5"/>
+  <circle cx="32" cy="32" r="6" fill="#fff"/>
+  <path d="M25 3h14L32 15Z" fill="#ee8058" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>
