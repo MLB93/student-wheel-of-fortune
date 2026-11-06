@@ -4,7 +4,7 @@ A simple, animated wheel for randomly selecting students in class. The app is a 
 
 ## Get started
 
-1. Open [student-wheel-of-fortune.html](./student-wheel-of-fortune.html) in Microsoft Edge, Google Chrome, or Mozilla Firefox.
+1. Open [student-wheel-of-fortune.html](./student-wheel-of-fortune.html) or the [GitHub Pages version](https://mlb93.github.io/student-wheel-of-fortune/student-wheel-of-fortune.html) in Microsoft Edge, Google Chrome, or Mozilla Firefox.
 2. Create a class with **＋ Class**.
 3. Add students to the selected class.
 4. Select **Spin** to choose a student.
