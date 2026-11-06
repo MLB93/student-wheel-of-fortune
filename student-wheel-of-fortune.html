@@ -236,6 +236,8 @@
 
     .wheel-panel {
       display: flex;
+      position: relative;
+      isolation: isolate;
       min-width: 0;
       min-height: 0;
       flex-direction: column;
@@ -245,10 +247,74 @@
       background: radial-gradient(ellipse at 50% 43%, var(--paper) 0, var(--paper) 43%, var(--canvas) 100%);
     }
 
+    .wheel-panel > :not(.seasonal-snow) { position: relative; z-index: 1; }
+    .wheel-panel > .seasonal-snow {
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
     .wheel-heading { align-self: stretch; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
     .active-pill { padding: 6px 10px; border-radius: 20px; background: var(--green-soft); color: var(--green); font-size: 12px; font-weight: 700; }
     .wheel-wrap { position: relative; width: min(100%, 600px, calc(100dvh - 460px)); margin: 22px auto 13px; }
     canvas { display: block; width: 100%; height: auto; overflow: visible; }
+    .wheel-wrap > #wheel { position: relative; z-index: 0; }
+    .wheel-wrap > .fireworks-canvas {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .seasonal-bats[hidden], .holiday-hat[hidden], .fireworks-canvas[hidden], .seasonal-snow[hidden] { display: none; }
+    .seasonal-bats { position: absolute; z-index: 2; inset: -4%; pointer-events: none; }
+    .seasonal-bats svg { position: absolute; width: 26px; height: 20px; fill: #30241f; }
+    .seasonal-bats svg:nth-child(1) { top: 20%; left: 3%; transform: rotate(-18deg) scale(.8); }
+    .seasonal-bats svg:nth-child(2) { top: 46%; right: 0; transform: rotate(12deg); }
+    .seasonal-bats svg:nth-child(3) { right: 15%; bottom: 1%; transform: rotate(-8deg) scale(.7); }
+    body.dark-mode .seasonal-bats svg { fill: #f28c28; }
+    .holiday-hat {
+      position: absolute;
+      z-index: 3;
+      top: -15px;
+      left: calc(50% + 1px);
+      width: 30px;
+      height: 22px;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .holiday-hat-cap {
+      position: absolute;
+      right: 4px;
+      bottom: 5px;
+      left: 5px;
+      height: 16px;
+      border-radius: 12px 4px 0 0;
+      background: #c62828;
+      clip-path: polygon(0 100%, 100% 100%, 82% 0);
+    }
+    .holiday-hat-brim {
+      position: absolute;
+      right: 0;
+      bottom: 2px;
+      left: 0;
+      height: 5px;
+      border-radius: 5px;
+      background: #fff;
+    }
+    .holiday-hat-pom {
+      position: absolute;
+      top: 0;
+      right: 2px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+    }
 
     .pointer {
       position: absolute;
@@ -425,8 +491,20 @@
         </div>
         <div class="wheel-wrap">
           <div class="pointer" aria-hidden="true"></div>
+          <div class="holiday-hat" id="holiday-hat" aria-hidden="true" hidden>
+            <span class="holiday-hat-cap"></span>
+            <span class="holiday-hat-brim"></span>
+            <span class="holiday-hat-pom"></span>
+          </div>
           <canvas id="wheel" aria-label="Wheel showing all students; inactive students are dimmed and the latest winner is highlighted"></canvas>
+          <canvas class="fireworks-canvas" id="fireworks-canvas" aria-hidden="true" hidden></canvas>
+          <div class="seasonal-bats" id="seasonal-bats" aria-hidden="true" hidden>
+            <svg viewBox="0 0 32 24"><path d="M16 8C12 1 4 2 1 0c1 5 1 9 5 12-3-1-5 0-6 2 5 0 8 2 10 5 2-1 4-1 6 0 2-1 4-1 6 0 2-3 5-5 10-5-1-2-3-3-6-2 4-3 4-7 5-12-3 2-11 1-15 8Z"/></svg>
+            <svg viewBox="0 0 32 24"><path d="M16 8C12 1 4 2 1 0c1 5 1 9 5 12-3-1-5 0-6 2 5 0 8 2 10 5 2-1 4-1 6 0 2-1 4-1 6 0 2-3 5-5 10-5-1-2-3-3-6-2 4-3 4-7 5-12-3 2-11 1-15 8Z"/></svg>
+            <svg viewBox="0 0 32 24"><path d="M16 8C12 1 4 2 1 0c1 5 1 9 5 12-3-1-5 0-6 2 5 0 8 2 10 5 2-1 4-1 6 0 2-1 4-1 6 0 2-3 5-5 10-5-1-2-3-3-6-2 4-3 4-7 5-12-3 2-11 1-15 8Z"/></svg>
+          </div>
         </div>
+        <canvas class="seasonal-snow" id="seasonal-snow" aria-hidden="true" hidden></canvas>
         <div class="spin-button-slot">
           <button class="button primary spin-button" id="spin-button" type="button">Spin</button>
         </div>
@@ -512,6 +590,10 @@
       const studentCount = $("#student-count");
       const activePill = $("#active-pill");
       const wheel = $("#wheel");
+      const wheelWrap = $(".wheel-wrap");
+      const wheelPanel = $(".wheel-panel");
+      const snowCanvas = $("#seasonal-snow");
+      const fireworksCanvas = $("#fireworks-canvas");
       const spinButton = $("#spin-button");
       const result = $("#result");
       const classDialog = $("#class-dialog");
@@ -526,6 +608,9 @@
       let tickBuffer = null;
       let aprilFoolsDodgeCount = 0;
       let aprilFoolsPlayed = false;
+      let snowAnimationFrame = null;
+      let fireworksAnimationFrame = null;
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
       const aprilFoolsDialog = $("#april-fools-dialog");
 
       function makeId() {
@@ -543,6 +628,31 @@
         if (!Array.isArray(group.wheelStudentIds)) return group.students;
         const visibleIds = new Set(group.wheelStudentIds);
         return group.students.filter((student) => visibleIds.has(student.id));
+      }
+
+      function seasonalThemeFor(date = new Date()) {
+        if (date.getMonth() === 9 && date.getDate() >= 25) {
+          return {
+            colors: ["#202020", "#f28c28"],
+            textColors: ["#ffffff", "#202020"],
+            winnerStroke: "#ffb347",
+            winnerGlow: "rgba(255,140,40,.8)"
+          };
+        }
+        if (date.getMonth() === 11) {
+          return {
+            colors: ["#8b1e2d", "#14532d"],
+            textColors: ["#ffffff", "#ffffff"],
+            winnerStroke: "#ffd166",
+            winnerGlow: "rgba(255,209,102,.8)"
+          };
+        }
+        return null;
+      }
+
+      function isNewYearSeason(date = new Date()) {
+        return (date.getMonth() === 11 && date.getDate() === 31)
+          || (date.getMonth() === 0 && date.getDate() <= 14);
       }
 
       function announce(message) {
@@ -915,18 +1025,7 @@
         context.setTransform(scale, 0, 0, scale, 0, 0);
         context.clearRect(0, 0, 500, 500);
         const theme = getComputedStyle(document.body);
-        const now = new Date();
-        const seasonalTheme = now.getMonth() === 9 && now.getDate() >= 25
-          ? {
-            colors: ["#202020", "#f28c28"],
-            textColors: ["#ffffff", "#202020"]
-          }
-          : now.getMonth() === 11
-          ? {
-              colors: ["#8b1e2d", "#14532d"],
-              textColors: ["#ffffff", "#ffffff"]
-            }
-            : null;
+        const seasonalTheme = seasonalThemeFor();
 
         const center = 250;
         const radius = 235;
@@ -960,11 +1059,14 @@
                 : COLORS[index % COLORS.length]
               : theme.getPropertyValue("--wheel-inactive").trim();
             context.fill();
-            context.strokeStyle = isWinner ? theme.getPropertyValue("--wheel-winner").trim() : "rgba(255,255,255,.9)";
+            context.strokeStyle = isWinner
+              ? seasonalTheme?.winnerStroke || theme.getPropertyValue("--wheel-winner").trim()
+              : "rgba(255,255,255,.9)";
             context.lineWidth = isWinner ? 9 : 2;
             if (isWinner) {
-              context.shadowColor = state.darkMode ? "rgba(139,221,180,.48)" : "rgba(23,107,82,.42)";
-              context.shadowBlur = 12;
+              context.shadowColor = seasonalTheme?.winnerGlow
+                || (state.darkMode ? "rgba(139,221,180,.48)" : "rgba(23,107,82,.42)");
+              context.shadowBlur = seasonalTheme ? 18 : 12;
             }
             context.stroke();
             context.shadowBlur = 0;
@@ -1009,6 +1111,145 @@
         context.strokeStyle = theme.getPropertyValue("--wheel-outline").trim();
         context.lineWidth = 8;
         context.stroke();
+      }
+
+      function stopSnowfall() {
+        if (snowAnimationFrame !== null) cancelAnimationFrame(snowAnimationFrame);
+        snowAnimationFrame = null;
+        snowCanvas.hidden = true;
+      }
+
+      function startSnowfall() {
+        if (snowAnimationFrame !== null || prefersReducedMotion.matches) return;
+        snowCanvas.hidden = false;
+        const flakes = Array.from({ length: 34 }, () => ({
+          x: Math.random(),
+          y: Math.random(),
+          radius: 1 + Math.random() * 2,
+          speed: 12 + Math.random() * 20,
+          drift: (Math.random() - 0.5) * 10
+        }));
+        let lastFrame = 0;
+
+        function animateSnowfall(timestamp) {
+          if (new Date().getMonth() !== 11 || prefersReducedMotion.matches) {
+            stopSnowfall();
+            return;
+          }
+          const bounds = wheelPanel.getBoundingClientRect();
+          const width = Math.max(1, bounds.width);
+          const height = Math.max(1, bounds.height);
+          const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+          const canvasWidth = Math.round(width * pixelRatio);
+          const canvasHeight = Math.round(height * pixelRatio);
+          if (snowCanvas.width !== canvasWidth || snowCanvas.height !== canvasHeight) {
+            snowCanvas.width = canvasWidth;
+            snowCanvas.height = canvasHeight;
+          }
+          const context = snowCanvas.getContext("2d");
+          context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+          context.clearRect(0, 0, width, height);
+          const elapsed = lastFrame ? Math.min((timestamp - lastFrame) / 1000, 0.05) : 0;
+          lastFrame = timestamp;
+          context.fillStyle = state.darkMode ? "rgba(255,255,255,.76)" : "rgba(132,158,181,.72)";
+
+          flakes.forEach((flake) => {
+            flake.y += (flake.speed * elapsed) / height;
+            flake.x += (flake.drift * elapsed) / width;
+            if (flake.y > 1) {
+              flake.y = 0;
+              flake.x = Math.random();
+            }
+            if (flake.x < 0) flake.x = 1;
+            if (flake.x > 1) flake.x = 0;
+            context.beginPath();
+            context.arc(flake.x * width, flake.y * height, flake.radius, 0, Math.PI * 2);
+            context.fill();
+          });
+          snowAnimationFrame = requestAnimationFrame(animateSnowfall);
+        }
+
+        snowAnimationFrame = requestAnimationFrame(animateSnowfall);
+      }
+
+      function syncSeasonalDecorations() {
+        const now = new Date();
+        const isHalloweenWeek = now.getMonth() === 9 && now.getDate() >= 25;
+        const isDecember = now.getMonth() === 11;
+        $("#seasonal-bats").hidden = !isHalloweenWeek;
+        $("#holiday-hat").hidden = !isDecember || now.getDate() !== 6;
+        if (isDecember && !prefersReducedMotion.matches) startSnowfall();
+        else stopSnowfall();
+        if (prefersReducedMotion.matches && fireworksAnimationFrame !== null) {
+          cancelAnimationFrame(fireworksAnimationFrame);
+          fireworksAnimationFrame = null;
+          fireworksCanvas.hidden = true;
+        }
+      }
+
+      function startFireworks() {
+        if (!isNewYearSeason() || prefersReducedMotion.matches) return;
+        if (fireworksAnimationFrame !== null) cancelAnimationFrame(fireworksAnimationFrame);
+        fireworksCanvas.hidden = false;
+        const bounds = wheelWrap.getBoundingClientRect();
+        const width = Math.max(1, bounds.width);
+        const height = Math.max(1, bounds.height);
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        fireworksCanvas.width = Math.round(width * pixelRatio);
+        fireworksCanvas.height = Math.round(height * pixelRatio);
+        const context = fireworksCanvas.getContext("2d");
+        context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        const colors = ["#ffd166", "#ff6685", "#78dce8", "#c5a3ff"];
+        const bursts = [0.2, 0.5, 0.8].map((x, burstIndex) => ({
+          x: width * x,
+          y: height * (burstIndex === 1 ? 0.19 : 0.27),
+          delay: burstIndex * 180,
+          particles: Array.from({ length: 28 }, (_, index) => {
+            const angle = (Math.PI * 2 * index) / 28 + Math.random() * 0.12;
+            const speed = 55 + Math.random() * 85;
+            return {
+              velocityX: Math.cos(angle) * speed,
+              velocityY: Math.sin(angle) * speed,
+              radius: 1.3 + Math.random() * 1.4,
+              color: colors[(index + burstIndex) % colors.length]
+            };
+          })
+        }));
+        let startedAt = null;
+
+        function animateFireworks(timestamp) {
+          if (prefersReducedMotion.matches) {
+            fireworksCanvas.hidden = true;
+            fireworksAnimationFrame = null;
+            return;
+          }
+          if (startedAt === null) startedAt = timestamp;
+          const elapsed = timestamp - startedAt;
+          context.clearRect(0, 0, width, height);
+          bursts.forEach((burst) => {
+            const age = (elapsed - burst.delay) / 1000;
+            if (age < 0 || age > 1.35) return;
+            const opacity = 1 - age / 1.35;
+            burst.particles.forEach((particle) => {
+              const x = burst.x + particle.velocityX * age;
+              const y = burst.y + particle.velocityY * age + 35 * age * age;
+              context.globalAlpha = opacity;
+              context.fillStyle = particle.color;
+              context.beginPath();
+              context.arc(x, y, particle.radius, 0, Math.PI * 2);
+              context.fill();
+            });
+          });
+          context.globalAlpha = 1;
+          if (elapsed < 2100) {
+            fireworksAnimationFrame = requestAnimationFrame(animateFireworks);
+          } else {
+            fireworksCanvas.hidden = true;
+            fireworksAnimationFrame = null;
+          }
+        }
+
+        fireworksAnimationFrame = requestAnimationFrame(animateFireworks);
       }
 
       function openClassDialog(mode) {
@@ -1227,6 +1468,7 @@
           result.innerHTML = `Selected: <strong></strong> <span>— highlighted until the next spin.</span>`;
           result.querySelector("strong").textContent = winner.name;
           persistAndRender();
+          startFireworks();
         }
 
         state.animationFrame = requestAnimationFrame(animate);
@@ -1413,6 +1655,9 @@
           drawWheel(wheelStudents(group), group ? group.winnerId : null);
         });
       }
+
+      syncSeasonalDecorations();
+      prefersReducedMotion.addEventListener("change", syncSeasonalDecorations);
 
       let previouslyGrantedStorageConsent = false;
       try {
