@@ -1718,6 +1718,9 @@
 
       syncSeasonalDecorations();
       prefersReducedMotion.addEventListener("change", syncSeasonalDecorations);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") syncSeasonalDecorations();
+      });
 
       let previouslyGrantedStorageConsent = false;
       try {
