@@ -915,6 +915,18 @@
         context.setTransform(scale, 0, 0, scale, 0, 0);
         context.clearRect(0, 0, 500, 500);
         const theme = getComputedStyle(document.body);
+        const now = new Date();
+        const seasonalTheme = now.getMonth() === 9 && now.getDate() >= 25
+          ? {
+            colors: ["#202020", "#f28c28"],
+            textColors: ["#ffffff", "#202020"]
+          }
+          : now.getMonth() === 11
+          ? {
+              colors: ["#8b1e2d", "#14532d"],
+              textColors: ["#ffffff", "#ffffff"]
+            }
+            : null;
 
         const center = 250;
         const radius = 235;
@@ -943,7 +955,9 @@
             context.closePath();
             const isWinner = student.id === winnerId;
             context.fillStyle = student.active || isWinner
-              ? COLORS[index % COLORS.length]
+              ? seasonalTheme
+                ? seasonalTheme.colors[index % seasonalTheme.colors.length]
+                : COLORS[index % COLORS.length]
               : theme.getPropertyValue("--wheel-inactive").trim();
             context.fill();
             context.strokeStyle = isWinner ? theme.getPropertyValue("--wheel-winner").trim() : "rgba(255,255,255,.9)";
@@ -963,11 +977,13 @@
               context.translate(labelRadius, 0);
               const fontSize = students.length > 24 ? 14 : students.length > 15 ? 16 : 19;
               context.font = `600 ${fontSize}px 'Segoe UI', sans-serif`;
-              context.fillStyle = isWinner
-                ? theme.getPropertyValue("--wheel-winner").trim()
-                : student.active
-                  ? theme.getPropertyValue("--wheel-text").trim()
-                  : theme.getPropertyValue("--wheel-muted").trim();
+              context.fillStyle = seasonalTheme && (student.active || isWinner)
+                ? seasonalTheme.textColors[index % seasonalTheme.textColors.length]
+                : isWinner
+                  ? theme.getPropertyValue("--wheel-winner").trim()
+                  : student.active
+                    ? theme.getPropertyValue("--wheel-text").trim()
+                    : theme.getPropertyValue("--wheel-muted").trim();
               context.textAlign = "left";
               context.textBaseline = "middle";
               const maxWidth = Math.max(24, radius - labelRadius - 12);
