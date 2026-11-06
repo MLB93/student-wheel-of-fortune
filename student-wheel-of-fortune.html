@@ -599,7 +599,7 @@
 <!-- <script>
   (() => {
     const RealDate = Date;
-    const fixedDate = new RealDate(2026, 9, 26, 12, 0, 0);
+    const fixedDate = new RealDate(2027, 2, 22, 12, 0, 0);
 
     class FakeDate extends RealDate {
       constructor(...args) {
@@ -690,7 +690,81 @@
         return group.students.filter((student) => visibleIds.has(student.id));
       }
 
+      function easterSundayFor(year) {
+        const a = year % 19;
+        const b = Math.floor(year / 100);
+        const c = year % 100;
+        const d = Math.floor(b / 4);
+        const e = b % 4;
+        const f = Math.floor((b + 8) / 25);
+        const g = Math.floor((b - f + 1) / 3);
+        const h = (19 * a + b - d - g + 15) % 30;
+        const i = Math.floor(c / 4);
+        const k = c % 4;
+        const l = (32 + 2 * e + 2 * i - h - k) % 7;
+        const m = Math.floor((a + 11 * h + 22 * l) / 451);
+        const month = Math.floor((h + l - 7 * m + 114) / 31);
+        const day = ((h + l - 7 * m + 114) % 31) + 1;
+        return new Date(year, month - 1, day);
+      }
+
+      function isEasterSeason(date = new Date()) {
+        const easter = easterSundayFor(date.getFullYear());
+        const today = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+        const easterDay = Date.UTC(easter.getFullYear(), easter.getMonth(), easter.getDate());
+        const firstDay = easterDay - 14 * 24 * 60 * 60 * 1000;
+        const lastDay = easterDay + 7 * 24 * 60 * 60 * 1000;
+        return today >= firstDay && today <= lastDay;
+      }
+
+      function drawEasterEggPattern(context, radius) {
+        const colors = ["#f3c6d3", "#c5e3d2", "#cbd8f3", "#f4e4a8"];
+        for (let index = 0; index < 8; index++) {
+          context.save();
+          const angle = (Math.PI * 2 * index) / 8;
+          context.rotate(angle);
+          context.translate(0, -radius + 29);
+          context.beginPath();
+          context.moveTo(0, -10);
+          context.bezierCurveTo(-4.2, -10, -6.2, -3.5, -6.2, 2);
+          context.bezierCurveTo(-6.2, 7, -3.2, 10, 0, 10);
+          context.bezierCurveTo(3.2, 10, 6.2, 7, 6.2, 2);
+          context.bezierCurveTo(6.2, -3.5, 4.2, -10, 0, -10);
+          context.fillStyle = colors[index % colors.length];
+          context.fill();
+          context.strokeStyle = "rgba(91,74,87,.42)";
+          context.lineWidth = 1;
+          context.stroke();
+          context.beginPath();
+          context.moveTo(-5.3, -2);
+          context.lineTo(-2.8, -3.5);
+          context.lineTo(0, -2);
+          context.lineTo(2.8, -3.5);
+          context.lineTo(5.3, -2);
+          context.moveTo(-5.7, 4);
+          context.quadraticCurveTo(0, 6.2, 5.7, 4);
+          context.strokeStyle = "rgba(255,255,255,.8)";
+          context.lineWidth = 1.4;
+          context.stroke();
+          context.fillStyle = "rgba(255,255,255,.88)";
+          for (const [dotX, dotY] of [[-2.7, -7], [2.7, 0], [-2.7, 8]]) {
+            context.beginPath();
+            context.arc(dotX, dotY, 0.9, 0, Math.PI * 2);
+            context.fill();
+          }
+          context.restore();
+        }
+      }
+
       function seasonalThemeFor(date = new Date()) {
+        if (isEasterSeason(date)) {
+          return {
+            colors: ["#f3c6d3", "#c5e3d2", "#cbd8f3", "#f4e4a8"],
+            textColors: ["#49343d", "#294538", "#303d59", "#514723"],
+            winnerStroke: "#9673ad",
+            winnerGlow: "rgba(150,115,173,.7)"
+          };
+        }
         if (date.getMonth() === 9 && date.getDate() >= 25) {
           return {
             colors: ["#202020", "#f28c28"],
@@ -1086,6 +1160,7 @@
         context.clearRect(0, 0, 500, 500);
         const theme = getComputedStyle(document.body);
         const seasonalTheme = seasonalThemeFor();
+        const isEaster = isEasterSeason();
 
         const center = 250;
         const radius = 235;
@@ -1098,6 +1173,7 @@
           context.arc(0, 0, radius, 0, Math.PI * 2);
           context.fillStyle = theme.getPropertyValue("--wheel-empty").trim();
           context.fill();
+          if (isEaster) drawEasterEggPattern(context, radius);
           context.fillStyle = theme.getPropertyValue("--wheel-muted").trim();
           context.font = "600 19px 'Segoe UI', sans-serif";
           context.textAlign = "center";
@@ -1155,6 +1231,7 @@
               context.restore();
             }
           });
+          if (isEaster) drawEasterEggPattern(context, radius);
         }
 
         context.beginPath();
@@ -1245,6 +1322,8 @@
           fireworksAnimationFrame = null;
           fireworksCanvas.hidden = true;
         }
+        const group = currentClass();
+        drawWheel(wheelStudents(group), group ? group.winnerId : null);
       }
 
       function startFireworks() {
