@@ -271,49 +271,62 @@
       pointer-events: none;
     }
     .seasonal-bats[hidden], .holiday-hat[hidden], .fireworks-canvas[hidden], .seasonal-snow[hidden] { display: none; }
-    .seasonal-bats { position: absolute; z-index: 2; inset: -4%; pointer-events: none; }
-    .seasonal-bats svg { position: absolute; width: 26px; height: 20px; fill: #30241f; }
-    .seasonal-bats svg:nth-child(1) { top: 20%; left: 3%; transform: rotate(-18deg) scale(.8); }
-    .seasonal-bats svg:nth-child(2) { top: 46%; right: 0; transform: rotate(12deg); }
-    .seasonal-bats svg:nth-child(3) { right: 15%; bottom: 1%; transform: rotate(-8deg) scale(.7); }
+    .seasonal-bats { position: absolute; z-index: 2; inset: -4%; overflow: hidden; pointer-events: none; }
+    .seasonal-bats svg {
+      position: absolute;
+      top: 12%;
+      left: -10%;
+      width: 38px;
+      height: 28px;
+      fill: #30241f;
+      animation: bat-flight 12s ease-in-out infinite;
+    }
+    .seasonal-bats svg:nth-child(2) { top: 45%; animation-duration: 15s; animation-delay: -7s; }
+    .seasonal-bats svg:nth-child(3) { top: 68%; width: 30px; height: 22px; animation-duration: 10s; animation-delay: -4s; }
+    .seasonal-bats .bat-wing-left { transform-box: view-box; transform-origin: 16px 9px; animation: bat-flap .28s ease-in-out infinite alternate; }
+    .seasonal-bats .bat-wing-right { transform-box: view-box; transform-origin: 16px 9px; animation: bat-flap .28s ease-in-out infinite alternate-reverse; }
+    .seasonal-bats svg:nth-child(1) { animation-name: bat-flight-one; }
+    .seasonal-bats svg:nth-child(2) { animation-name: bat-flight-two; }
+    .seasonal-bats svg:nth-child(3) { animation-name: bat-flight-three; }
+    @keyframes bat-flap {
+      from { transform: rotate(-22deg) scaleY(.72); }
+      to { transform: rotate(22deg) scaleY(1.12); }
+    }
+    @keyframes bat-flight-one {
+      0% { left: -10%; top: 18%; transform: rotate(-12deg) scale(.8); }
+      25% { left: 19%; top: 12%; transform: rotate(10deg) scale(.92); }
+      50% { left: 43%; top: 31%; transform: rotate(-5deg) scale(.82); }
+      75% { left: 69%; top: 17%; transform: rotate(12deg) scale(1); }
+      100% { left: 110%; top: 26%; transform: rotate(-8deg) scale(.85); }
+    }
+    @keyframes bat-flight-two {
+      0% { left: -10%; top: 52%; transform: rotate(8deg) scale(.72); }
+      30% { left: 28%; top: 39%; transform: rotate(-12deg) scale(.9); }
+      60% { left: 61%; top: 53%; transform: rotate(10deg) scale(.78); }
+      100% { left: 110%; top: 36%; transform: rotate(-6deg) scale(.95); }
+    }
+    @keyframes bat-flight-three {
+      0% { left: -10%; top: 70%; transform: rotate(-8deg) scale(.72); }
+      35% { left: 31%; top: 61%; transform: rotate(12deg) scale(.86); }
+      70% { left: 68%; top: 72%; transform: rotate(-10deg) scale(.75); }
+      100% { left: 110%; top: 57%; transform: rotate(8deg) scale(.9); }
+    }
     body.dark-mode .seasonal-bats svg { fill: #f28c28; }
     .holiday-hat {
       position: absolute;
       z-index: 3;
-      top: -15px;
-      left: calc(50% + 1px);
-      width: 30px;
-      height: 22px;
-      transform: translateX(-50%);
+      top: -25px;
+      left: calc(50% - 1px);
+      width: 46px;
+      height: 36px;
+      overflow: visible;
+      transform: translateX(-50%) rotate(-7deg);
       pointer-events: none;
     }
-    .holiday-hat-cap {
-      position: absolute;
-      right: 4px;
-      bottom: 5px;
-      left: 5px;
-      height: 16px;
-      border-radius: 12px 4px 0 0;
-      background: #c62828;
-      clip-path: polygon(0 100%, 100% 100%, 82% 0);
-    }
-    .holiday-hat-brim {
-      position: absolute;
-      right: 0;
-      bottom: 2px;
-      left: 0;
-      height: 5px;
-      border-radius: 5px;
-      background: #fff;
-    }
-    .holiday-hat-pom {
-      position: absolute;
-      top: 0;
-      right: 2px;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #fff;
+    .holiday-hat svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .seasonal-bats svg, .seasonal-bats .bat-wing-left, .seasonal-bats .bat-wing-right { animation: none !important; }
     }
 
     .pointer {
@@ -492,16 +505,36 @@
         <div class="wheel-wrap">
           <div class="pointer" aria-hidden="true"></div>
           <div class="holiday-hat" id="holiday-hat" aria-hidden="true" hidden>
-            <span class="holiday-hat-cap"></span>
-            <span class="holiday-hat-brim"></span>
-            <span class="holiday-hat-pom"></span>
+            <svg viewBox="0 0 48 36">
+              <path d="M5 25C10 13 19 6 33 4c-3 9 1 16 9 21L5 25Z" fill="#c62828" stroke="#8c1720" stroke-width="1.5" stroke-linejoin="round"/>
+              <path d="M4 23c11 1 26-4 39 0l1 7c-14-4-28 2-39-1l-1-6Z" fill="#fff" stroke="#d7d9d4" stroke-width="1.2"/>
+              <circle cx="34" cy="5" r="4.5" fill="#fff" stroke="#d7d9d4" stroke-width="1"/>
+            </svg>
           </div>
           <canvas id="wheel" aria-label="Wheel showing all students; inactive students are dimmed and the latest winner is highlighted"></canvas>
           <canvas class="fireworks-canvas" id="fireworks-canvas" aria-hidden="true" hidden></canvas>
           <div class="seasonal-bats" id="seasonal-bats" aria-hidden="true" hidden>
-            <svg viewBox="0 0 32 24"><path d="M16 8C12 1 4 2 1 0c1 5 1 9 5 12-3-1-5 0-6 2 5 0 8 2 10 5 2-1 4-1 6 0 2-1 4-1 6 0 2-3 5-5 10-5-1-2-3-3-6-2 4-3 4-7 5-12-3 2-11 1-15 8Z"/></svg>
-            <svg viewBox="0 0 32 24"><path d="M16 8C12 1 4 2 1 0c1 5 1 9 5 12-3-1-5 0-6 2 5 0 8 2 10 5 2-1 4-1 6 0 2-1 4-1 6 0 2-3 5-5 10-5-1-2-3-3-6-2 4-3 4-7 5-12-3 2-11 1-15 8Z"/></svg>
-            <svg viewBox="0 0 32 24"><path d="M16 8C12 1 4 2 1 0c1 5 1 9 5 12-3-1-5 0-6 2 5 0 8 2 10 5 2-1 4-1 6 0 2-1 4-1 6 0 2-3 5-5 10-5-1-2-3-3-6-2 4-3 4-7 5-12-3 2-11 1-15 8Z"/></svg>
+            <svg viewBox="0 0 32 24">
+              <path class="bat-wing-left" d="M15 10C11 6 6 3 1 2c1 6 4 10 10 12-3 0-6 2-8 4 5-1 9 0 12 4Z"/>
+              <path class="bat-wing-right" d="M17 10c4-4 9-7 14-8-1 6-4 10-10 12 3 0 6 2 8 4-5-1-9 0-12 4Z"/>
+              <path d="m13.5 8-2-4 4 2m3 2 2-4-4 2"/>
+              <ellipse cx="16" cy="15" rx="2.7" ry="6.5"/>
+              <circle cx="16" cy="7" r="2.5"/>
+            </svg>
+            <svg viewBox="0 0 32 24">
+              <path class="bat-wing-left" d="M15 10C11 6 6 3 1 2c1 6 4 10 10 12-3 0-6 2-8 4 5-1 9 0 12 4Z"/>
+              <path class="bat-wing-right" d="M17 10c4-4 9-7 14-8-1 6-4 10-10 12 3 0 6 2 8 4-5-1-9 0-12 4Z"/>
+              <path d="m13.5 8-2-4 4 2m3 2 2-4-4 2"/>
+              <ellipse cx="16" cy="15" rx="2.7" ry="6.5"/>
+              <circle cx="16" cy="7" r="2.5"/>
+            </svg>
+            <svg viewBox="0 0 32 24">
+              <path class="bat-wing-left" d="M15 10C11 6 6 3 1 2c1 6 4 10 10 12-3 0-6 2-8 4 5-1 9 0 12 4Z"/>
+              <path class="bat-wing-right" d="M17 10c4-4 9-7 14-8-1 6-4 10-10 12 3 0 6 2 8 4-5-1-9 0-12 4Z"/>
+              <path d="m13.5 8-2-4 4 2m3 2 2-4-4 2"/>
+              <ellipse cx="16" cy="15" rx="2.7" ry="6.5"/>
+              <circle cx="16" cy="7" r="2.5"/>
+            </svg>
           </div>
         </div>
         <canvas class="seasonal-snow" id="seasonal-snow" aria-hidden="true" hidden></canvas>
@@ -562,6 +595,33 @@
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- <script>
+  (() => {
+    const RealDate = Date;
+    const fixedDate = new RealDate(2026, 9, 26, 12, 0, 0);
+
+    class FakeDate extends RealDate {
+      constructor(...args) {
+        super(...(args.length ? args : [fixedDate.getTime()]));
+      }
+
+      static now() {
+        return fixedDate.getTime();
+      }
+
+      static parse(value) {
+        return RealDate.parse(value);
+      }
+
+      static UTC(...args) {
+        return RealDate.UTC(...args);
+      }
+    }
+
+    window.Date = FakeDate;
+  })();
+</script> -->
 
   <script>
     (() => {
